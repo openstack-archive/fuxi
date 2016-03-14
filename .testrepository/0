@@ -1,0 +1,13 @@
+time: 2016-03-24 09:21:57.854120Z
+tags: worker-0
+test: fuxi.tests.test_fuxi.TestFuxi.test_something
+time: 2016-03-24 09:21:57.855419Z
+successful: fuxi.tests.test_fuxi.TestFuxi.test_something [ multipart
+Content-Type: text/plain;charset="utf8"
+stderr
+0
+Content-Type: text/plain;charset="utf8"
+stdout
+0
+]
+tags: -worker-0
