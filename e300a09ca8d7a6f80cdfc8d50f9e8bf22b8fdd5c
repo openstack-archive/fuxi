@@ -1,0 +1,8 @@
+Code-Review+2: Zhang Ni <zhangni@huawei.com>
+Workflow+1: Zhang Ni <zhangni@huawei.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 29 Mar 2016 02:12:39 +0000
+Reviewed-on: https://review.openstack.org/292247
+Project: openstack/fuxi
+Branch: refs/heads/master
