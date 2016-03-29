@@ -4,9 +4,11 @@ fuxi
 
 Enable Docker container to use Cinder volume and Manila share
 
-Please feel here a long description which must be at least 3 lines wrapped on
-80 cols, so that distribution package maintainers can use it in their packages.
-Note that this is a hard requirement.
+Fuxi focuses on enabling Docker container to use Cinder volume and Manila
+share, thus Docker volume can reuse the advance features and numerous vendor
+drivers in Cinder and Manila. With Fuxi, Cinder and Manila can be used as
+the unified persistence storage provider for virtual machine, baremetal
+and Docker container.
 
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/fuxi
