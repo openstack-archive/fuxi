@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Copyright 2010-2011 OpenStack Foundation
-# Copyright (c) 2013 Hewlett-Packard Development Company, L.P.
-#
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
@@ -15,11 +10,24 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslotest import base
+__all__ = [
+    'list_fuxi_opts',
+]
+
+import itertools
+
+import fuxi.common.config
 
 
-class TestCase(base.BaseTestCase):
+_fuxi_opts = [
+    (None, list(itertools.chain(
+        fuxi.common.config.default_opts))),
+    ('keystone', fuxi.common.config.keystone_opts),
+    ('cinder', fuxi.common.config.cinder_opts),
+]
 
-    """Test case base class for all unit tests."""
-    def setUp(self):
-        super(TestCase, self).setUp()
+
+def list_fuxi_opts():
+    return [('DEFAULT', itertools.chain(fuxi.common.config.default_opts,)),
+            ('keystone', itertools.chain(fuxi.common.config.keystone_opts,)),
+            ('cinder', itertools.chain(fuxi.common.config.cinder_opts,)), ]
