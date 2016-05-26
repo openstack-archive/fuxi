@@ -21,3 +21,5 @@ from oslotest import base
 class TestCase(base.BaseTestCase):
 
     """Test case base class for all unit tests."""
+    def setUp(self):
+        super(TestCase, self).setUp()
