@@ -12,8 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import pbr.version
+import logging
+import sys
 
+from fuxi import utils
 
-__version__ = pbr.version.VersionInfo(
-    'fuxi').version_string()
+app = utils.make_json_app(__name__)
+
+app.logger.addHandler(logging.StreamHandler(sys.stdout))
+app.logger.setLevel(logging.INFO)

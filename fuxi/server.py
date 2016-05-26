@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Copyright 2010-2011 OpenStack Foundation
-# Copyright (c) 2013 Hewlett-Packard Development Company, L.P.
-#
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
@@ -15,11 +10,22 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslotest import base
+import logging
+import sys
+
+from fuxi import app
+from fuxi.common import config
+from fuxi import controllers
+
+LOG = logging.getLogger(__name__)
 
 
-class TestCase(base.BaseTestCase):
+def start():
+    config.init(sys.argv[1:])
+    port = config.CONF.fuxi_port
 
-    """Test case base class for all unit tests."""
-    def setUp(self):
-        super(TestCase, self).setUp()
+    controllers.init_app_conf()
+    LOG.info("start server on port: %s" % port)
+    app.run("0.0.0.0", port,
+            debug=config.CONF.debug,
+            threaded=config.CONF.threaded)

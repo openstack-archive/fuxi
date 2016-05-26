@@ -1,0 +1,30 @@
+# fuxi-rootwrap command filters for volume nodes
+# This file should be owned by (and only-writeable by) the root user
+
+[Filters]
+# os-brick library commands
+# os_brick.privileged.run_as_root oslo.privsep context
+# This line ties the superuser privs with the config files, context name,
+# and (implicitly) the actual python code invoked.
+privsep-rootwrap: RegExpFilter, privsep-helper, root, privsep-helper, --config-file, /etc/(?!\.\.).*, --privsep_context, os_brick.privileged.default, --privsep_sock_path, /tmp/.*
+# The following and any cinder/brick/* entries should all be obsoleted
+# by privsep, and may be removed once the os-brick version requirement
+# is updated appropriately.
+scsi_id: CommandFilter, /lib/udev/scsi_id, root
+drbdadm: CommandFilter, drbdadm, root
+iscsiadm: CommandFilter, iscsiadm, root
+sg_scan: CommandFilter, sg_scan, root
+systool: CommandFilter, systool, root
+cat: CommandFilter, cat, root
+
+# fuxi/connector/cloudconnector/openstack.py
+ln: CommandFilter, ln, root
+
+# fuxi/blockdevice.py
+mount: CommandFilter, mount, root
+umount: CommandFilter, umount, root
+mkfs: CommandFilter, mkfs, root
+
+mkdir: CommandFilter, mkdir, root
+tee: CommandFilter, tee, root
+ls: CommandFilter, ls, root
