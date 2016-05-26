@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
@@ -12,6 +10,22 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuxi import utils
+import sys
 
-app = utils.make_json_app(__name__)
+from fuxi import app
+from fuxi.common import config
+from fuxi import controllers
+
+from oslo_log import log as logging
+
+
+def start():
+    config.init(sys.argv[1:])
+    logging.setup(config.CONF, 'fuxi')
+
+    controllers.init_app_conf()
+
+    port = config.CONF.fuxi_port
+    app.run("0.0.0.0", port,
+            debug=config.CONF.debug,
+            threaded=config.CONF.threaded)
