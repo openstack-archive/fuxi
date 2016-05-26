@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
@@ -12,6 +10,24 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuxi import utils
+__all__ = [
+    'list_fuxi_opts',
+]
 
-app = utils.make_json_app(__name__)
+import itertools
+
+import fuxi.common.config
+
+
+_fuxi_opts = [
+    (None, list(itertools.chain(
+        fuxi.common.config.default_opts))),
+    ('keystone', fuxi.common.config.keystone_opts),
+    ('cinder', fuxi.common.config.cinder_opts),
+]
+
+
+def list_fuxi_opts():
+    return [('DEFAULT', itertools.chain(fuxi.common.config.default_opts,)),
+            ('keystone', itertools.chain(fuxi.common.config.keystone_opts,)),
+            ('cinder', itertools.chain(fuxi.common.config.cinder_opts,)), ]
