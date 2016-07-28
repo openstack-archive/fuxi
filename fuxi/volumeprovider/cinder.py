@@ -193,6 +193,54 @@ class Cinder(provider.Provider):
                      "successfully").format(docker_volume_name, volume))
         return volume
 
+    def _create_from_existed_volume(self, docker_volume_name,
+                                    cinder_volume_id,
+                                    volume_opts):
+        try:
+            cinder_volume = self.cinderclient.volumes.get(cinder_volume_id)
+        except cinder_exception.ClientException as e:
+            LOG.error(_LE("Failed to get volume {0} from Cinder. "
+                          "Error: {1}").format(cinder_volume_id, e))
+            raise
+
+        status = cinder_volume.status
+        if status not in ['available', 'in-use']:
+            LOG.error(_LE("Current volume {0} status {1} not in desired"
+                          "states").format(cinder_volume, status))
+            raise exceptions.NotMatchedState('Cinder volume is unavailable')
+        elif status == 'in-use' and not cinder_volume.multiattach:
+            if not self._check_attached_to_this(cinder_volume):
+                LOG.error(_LE("Current volume {0} status {1} not in desired"
+                              "states").format(cinder_volume, status))
+                raise exceptions.NotMatchedState(
+                    'Cinder volume is unavailable')
+
+        if cinder_volume.name != docker_volume_name:
+            LOG.error(_LE("Provided volume name {0} does not match with "
+                          "existed Cinder volume name").format(
+                docker_volume_name, cinder_volume.name))
+            raise exceptions.InvalidInput('Volume name not match')
+
+        fstype = volume_opts.pop('fstype', cinder_conf.fstype)
+        vol_fstype = cinder_volume.metadata.get('fstype',
+                                                cinder_conf.fstype)
+        if fstype != vol_fstype:
+            msg = _LE("Volume already exists with fstype {0}, but "
+                      "currently provided fstype is {1}, not "
+                      "match").format(vol_fstype, fstype)
+            LOG.error(msg)
+            raise exceptions.InvalidInput('FSType not match')
+
+        try:
+            metadata = {consts.VOLUME_FROM: CONF.volume_from,
+                        'fstype': fstype}
+            self.cinderclient.volumes.set_metadata(cinder_volume, metadata)
+        except cinder_exception.ClientException as e:
+            LOG.error(_LE("Failed to update volume {0} information. "
+                          "Error: {1}").format(cinder_volume_id, e))
+            raise
+        return cinder_volume
+
     def create(self, docker_volume_name, volume_opts):
         if not volume_opts:
             volume_opts = {}
@@ -231,10 +279,20 @@ class Cinder(provider.Provider):
                 LOG.error(msg)
                 raise exceptions.FuxiException(msg)
         elif state == UNKNOWN:
-            volume_opts['name'] = docker_volume_name
-            cinder_volume = self._create_volume(docker_volume_name,
-                                                volume_opts)
-            device_info = connector.connect_volume(cinder_volume)
+            if 'volume_id' in volume_opts:
+                cinder_volume = self._create_from_existed_volume(
+                    docker_volume_name,
+                    volume_opts.pop('volume_id'),
+                    volume_opts)
+                if self._check_attached_to_this(cinder_volume):
+                    device_info = {
+                        'path': connector.get_device_path(cinder_volume)}
+                else:
+                    device_info = connector.connect_volume(cinder_volume)
+            else:
+                cinder_volume = self._create_volume(docker_volume_name,
+                                                    volume_opts)
+                device_info = connector.connect_volume(cinder_volume)
 
         return device_info
 
