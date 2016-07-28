@@ -18,6 +18,7 @@ import tempfile
 from fuxi.common import config
 from fuxi.common import constants as consts
 from fuxi.common import mount
+from fuxi.common import state_monitor
 from fuxi import exceptions
 from fuxi.tests import base, fake_client, fake_object
 from fuxi import utils
@@ -52,6 +53,7 @@ def mock_connector(cls):
 
 
 def mock_monitor_cinder_volume(cls):
+    cls.expected_obj.status = cls.desired_state
     return cls.expected_obj
 
 
@@ -73,6 +75,82 @@ class TestCinder(base.TestCase):
     def test_create_with_volume_not_exist(self, mock_docker_volume):
         self.assertEqual(os.path.join(volume_link_dir, DEFAULT_VOLUME_ID),
                          self.cinderprovider.create('fake-vol', {})['path'])
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(
+                           status='unknown'), consts.UNKNOWN))
+    @mock.patch.object(state_monitor.StateMonitor, 'monitor_cinder_volume',
+                       mock_monitor_cinder_volume)
+    def test_create_from_volume_id(self, mock_docker_volume):
+        fake_volume_name = 'fake_vol'
+        fake_volume_opts = {'volume_id': DEFAULT_VOLUME_ID}
+        result = self.cinderprovider.create(fake_volume_name,
+                                            fake_volume_opts)
+        self.assertEqual(os.path.join(consts.VOLUME_LINK_DIR,
+                                      DEFAULT_VOLUME_ID),
+                         result['path'])
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(
+                           status='unknown'), consts.UNKNOWN))
+    @mock.patch('fuxi.tests.fake_client.FakeCinderClient.Volumes.get',
+                side_effect=cinder_exception.ClientException(404))
+    def test_create_from_volume_id_with_volume_not_exist(self,
+                                                         mocK_docker_volume,
+                                                         mock_volume_get):
+        fake_volume_name = 'fake_vol'
+        fake_volume_opts = {'volume_id': DEFAULT_VOLUME_ID}
+        self.assertRaises(cinder_exception.ClientException,
+                          self.cinderprovider.create,
+                          fake_volume_name,
+                          fake_volume_opts)
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(
+                           status='unknown'), consts.UNKNOWN))
+    def test_create_from_volume_id_with_unexpected_status_1(
+            self, mock_docker_volume):
+        fake_volume_name = 'fake_vol'
+        fake_volume_args = {'volume_id': DEFAULT_VOLUME_ID,
+                            'status': 'attaching'}
+        fake_cinder_volume = fake_object.FakeCinderVolume(**fake_volume_args)
+        self.cinderprovider._get_docker_volume = mock.MagicMock()
+        self.cinderprovider._get_docker_volume.return_value \
+            = (fake_cinder_volume,
+               consts.UNKNOWN)
+        self.cinderprovider.cinderclient.volumes.get = mock.MagicMock()
+        self.cinderprovider.cinderclient.volumes.get.return_value = \
+            fake_cinder_volume
+        self.assertRaises(exceptions.FuxiException,
+                          self.cinderprovider.create,
+                          fake_volume_name,
+                          {'volume_id': DEFAULT_VOLUME_ID})
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    def test_create_from_volume_id_with_unexpected_status_2(self):
+        fake_server_id = 'fake_server_123'
+        fake_host_name = 'attached_to_other'
+        fake_volume_name = 'fake_vol'
+        fake_volume_args = {'volume_id': DEFAULT_VOLUME_ID,
+                            'status': 'in-use',
+                            'multiattach': False,
+                            'attachments': [{'server_id': fake_server_id,
+                                             'host_name': fake_host_name}]}
+        fake_cinder_volume = fake_object.FakeCinderVolume(**fake_volume_args)
+        self.cinderprovider._get_docker_volume = mock.MagicMock()
+        self.cinderprovider._get_docker_volume.return_value \
+            = (fake_cinder_volume,
+               consts.UNKNOWN)
+        self.cinderprovider.cinderclient.volumes.get = mock.MagicMock()
+        self.cinderprovider.cinderclient.volumes.get.return_value = \
+            fake_cinder_volume
+        self.assertRaises(exceptions.FuxiException,
+                          self.cinderprovider.create,
+                          fake_volume_name,
+                          {'volume_id': DEFAULT_VOLUME_ID})
 
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
     def test_create_with_volume_attach_to_this(self):

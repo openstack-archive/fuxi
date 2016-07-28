@@ -193,6 +193,58 @@ class Cinder(provider.Provider):
                      "successfully").format(docker_volume_name, volume))
         return volume
 
+    def _create_from_existing_volume(self, docker_volume_name,
+                                     cinder_volume_id,
+                                     volume_opts):
+        try:
+            cinder_volume = self.cinderclient.volumes.get(cinder_volume_id)
+        except cinder_exception.ClientException as e:
+            msg = _LE("Failed to get volume %(vol_id)s from Cinder. "
+                      "Error: %(err)s")
+            LOG.error(msg, {'vol_id': cinder_volume_id, 'err': e})
+            raise
+
+        status = cinder_volume.status
+        if status not in ('available', 'in-use'):
+            LOG.error(_LE("Current volume %(vol)s status %(status)s not in "
+                          "desired states"),
+                      {'vol': cinder_volume, 'status': status})
+            raise exceptions.NotMatchedState('Cinder volume is unavailable')
+        elif status == 'in-use' and not cinder_volume.multiattach:
+            if not self._check_attached_to_this(cinder_volume):
+                msg = _LE("Current volume %(vol)s status %(status)s not "
+                          "in desired states")
+                LOG.error(msg, {'vol': cinder_volume, 'status': status})
+                raise exceptions.NotMatchedState(
+                    'Cinder volume is unavailable')
+
+        if cinder_volume.name != docker_volume_name:
+            LOG.error(_LE("Provided volume name %(d_name)s does not match "
+                          "with existing Cinder volume name %(c_name)s"),
+                      {'d_name': docker_volume_name,
+                       'c_name': cinder_volume.name})
+            raise exceptions.InvalidInput('Volume name does not match')
+
+        fstype = volume_opts.pop('fstype', cinder_conf.fstype)
+        vol_fstype = cinder_volume.metadata.get('fstype',
+                                                cinder_conf.fstype)
+        if fstype != vol_fstype:
+            LOG.error(_LE("Volume already exists with fstype %(c_fstype)s, "
+                          "but currently provided fstype is %(fstype)s, not "
+                          "match"), {'c_fstype': vol_fstype, 'fstype': fstype})
+            raise exceptions.InvalidInput('FSType does not match')
+
+        try:
+            metadata = {consts.VOLUME_FROM: CONF.volume_from,
+                        'fstype': fstype}
+            self.cinderclient.volumes.set_metadata(cinder_volume, metadata)
+        except cinder_exception.ClientException as e:
+            LOG.error(_LE("Failed to update volume %(vol)s information. "
+                          "Error: %(err)s"),
+                      {'vol': cinder_volume_id, 'err': e})
+            raise
+        return cinder_volume
+
     def create(self, docker_volume_name, volume_opts):
         if not volume_opts:
             volume_opts = {}
@@ -231,10 +283,20 @@ class Cinder(provider.Provider):
                 LOG.error(msg)
                 raise exceptions.FuxiException(msg)
         elif state == UNKNOWN:
-            volume_opts['name'] = docker_volume_name
-            cinder_volume = self._create_volume(docker_volume_name,
-                                                volume_opts)
-            device_info = connector.connect_volume(cinder_volume)
+            if 'volume_id' in volume_opts:
+                cinder_volume = self._create_from_existing_volume(
+                    docker_volume_name,
+                    volume_opts.pop('volume_id'),
+                    volume_opts)
+                if self._check_attached_to_this(cinder_volume):
+                    device_info = {
+                        'path': connector.get_device_path(cinder_volume)}
+                else:
+                    device_info = connector.connect_volume(cinder_volume)
+            else:
+                cinder_volume = self._create_volume(docker_volume_name,
+                                                    volume_opts)
+                device_info = connector.connect_volume(cinder_volume)
 
         return device_info
 

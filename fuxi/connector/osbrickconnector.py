@@ -106,7 +106,7 @@ class CinderConnector(fuxi_connector.Connector):
         except processutils.ProcessExecutionError as e:
             LOG.error(_LE("Failed to create link for device. %s"), e)
             raise
-        return {'path': link_path, 'iscsi_path': device_info['path']}
+        return {'path': link_path}
 
     def _disconnect_volume(self, volume):
         try:
