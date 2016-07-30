@@ -335,7 +335,7 @@ class Cinder(provider.Provider):
 
         docker_volumes = []
         try:
-            search_opts = {'metadata': {consts.VOLUME_FROM: 'fuxi'}}
+            search_opts = {'metadata': {consts.VOLUME_FROM: CONF.volume_from}}
             for vol in self.cinderclient.volumes.list(search_opts=search_opts):
                 docker_volume_name = vol.name
                 if not docker_volume_name or not vol.attachments:
