@@ -225,3 +225,9 @@ def volumedriver_list():
     app.logger.info(_LI("Get volumes from volume providers. "
                         "Volumes: {0}").format(docker_volumes))
     return flask.jsonify(Err=u'', Volumes=docker_volumes)
+
+
+@app.route('/VolumeDriver.Capabilities', methods=['POST'])
+def volumedriver_capabilities():
+    app.logger.info(_LI("/VolumeDriver.Capabilities"))
+    return flask.jsonify(Capabilities={"Scope": "local"})
