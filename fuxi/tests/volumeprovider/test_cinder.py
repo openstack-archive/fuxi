@@ -151,6 +151,21 @@ class TestCinder(base.TestCase):
 
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
     @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(),
+                                     consts.NOT_ATTACH))
+    def test_delete_not_attach(self, mock_docker_volume):
+        self.cinderprovider._delete_volume = mock.MagicMock()
+        self.assertTrue(self.cinderprovider.delete('fake-vol'))
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(),
+                                     consts.ATTACH_TO_OTHER))
+    def test_delete_attach_to_other(self, mock_docker_volume):
+        self.assertTrue(self.cinderprovider.delete('fake-vol'))
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
                        return_value=(fake_object.FakeCinderVolume(status=None),
                                      None))
     def test_delete_not_match_state(self, mock_docker_volume):
@@ -265,6 +280,58 @@ class TestCinder(base.TestCase):
                                    return_value=fake_mountpoint):
                 self.assertEqual(fake_mountpoint,
                                  self.cinderprovider.mount('fake-vol'))
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(status=None),
+                                     None))
+    def test_mount_state_not_match(self, mock_docker_volume):
+        self.assertRaises(exceptions.NotMatchedState,
+                          self.cinderprovider.mount,
+                          'fake-vol')
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(),
+                                     consts.NOT_ATTACH))
+    @mock.patch.object(cinder.Cinder, '_create_mountpoint')
+    @mock.patch.object(mount, 'do_mount')
+    def test_mount_state_not_attach(self, mock_docker_volume,
+                                    mock_create_mp, mock_do_mount):
+        fd, fake_devpath = tempfile.mkstemp()
+        fake_link_path = fake_devpath
+        fake_mountpoint = 'fake-mount-point/'
+        with mock.patch.object(FakeCinderConnector, 'get_device_path',
+                               return_value=fake_link_path):
+            with mock.patch.object(cinder.Cinder, '_get_mountpoint',
+                                   return_value=fake_mountpoint):
+                self.assertEqual(fake_mountpoint,
+                                 self.cinderprovider.mount('fake-vol'))
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_create_mountpoint')
+    @mock.patch.object(mount, 'do_mount')
+    def test_mount_state_attach_to_other(self, mock_create_mp, mock_do_mount):
+        fd, fake_devpath = tempfile.mkstemp()
+        fake_link_path = fake_devpath
+        fake_mountpoint = 'fake-mount-point/'
+        with mock.patch.object(FakeCinderConnector, 'get_device_path',
+                               return_value=fake_link_path):
+            with mock.patch.object(cinder.Cinder, '_get_mountpoint',
+                                   return_value=fake_mountpoint):
+                fake_c_vol = fake_object.FakeCinderVolume(multiattach=True)
+                with mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                                       return_value=(fake_c_vol,
+                                                     consts.ATTACH_TO_OTHER)):
+                    self.assertEqual(fake_mountpoint,
+                                     self.cinderprovider.mount('fake-vol'))
+
+                fake_c_vol = fake_object.FakeCinderVolume(multiattach=False)
+                with mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                                       return_value=(fake_c_vol,
+                                                     consts.ATTACH_TO_OTHER)):
+                    self.assertRaises(exceptions.FuxiException,
+                                      self.cinderprovider.mount, 'fake-vol')
 
     def test_unmount(self):
         self.assertIsNone(self.cinderprovider.unmount('fake-vol'))
