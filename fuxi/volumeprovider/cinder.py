@@ -318,21 +318,22 @@ class Cinder(provider.Provider):
                 LOG.warn(msg)
                 self._delete_volume(available_volume)
             return True
+        elif state == NOT_ATTACH:
+            self._delete_volume(cinder_volume)
+            return True
+        elif state == ATTACH_TO_OTHER:
+            msg = _LW("Volume %s is still in use, could not delete it")
+            LOG.warn(msg, cinder_volume)
+            return True
         elif state == UNKNOWN:
             return False
         else:
-            msg = _LE("The volume {0} {1} state must be {2} when "
-                      "remove it from this server, but current state "
-                      "is {3}").format(docker_volume_name,
-                                       cinder_volume,
-                                       ATTACH_TO_THIS,
-                                       state)
+            msg = _LE("Volume {0} {1} state {2} is invalid").format(
+                docker_volume_name, cinder_volume, state)
             LOG.error(msg)
             raise exceptions.NotMatchedState(msg)
 
     def list(self):
-        LOG.info(_LI("Start to retrieve all docker volumes from Cinder"))
-
         docker_volumes = []
         try:
             search_opts = {'metadata': {consts.VOLUME_FROM: 'fuxi'}}
@@ -342,14 +343,13 @@ class Cinder(provider.Provider):
                     continue
 
                 mountpoint = self._get_mountpoint(vol.name)
-                if self._check_attached_to_this(vol):
-                    devpath = os.path.realpath(
-                        self._get_connector().get_device_path(vol))
-                    mps = mount.Mounter().get_mps_by_device(devpath)
-                    mountpoint = mountpoint if mountpoint in mps else ''
-                    docker_vol = {'Name': docker_volume_name,
-                                  'Mountpoint': mountpoint}
-                    docker_volumes.append(docker_vol)
+                devpath = os.path.realpath(
+                    self._get_connector().get_device_path(vol))
+                mps = mount.Mounter().get_mps_by_device(devpath)
+                mountpoint = mountpoint if mountpoint in mps else ''
+                docker_vol = {'Name': docker_volume_name,
+                              'Mountpoint': mountpoint}
+                docker_volumes.append(docker_vol)
         except cinder_exception.ClientException as e:
             LOG.error(_LE("Retrieve volume list failed. Error: {0}").format(e))
             raise
@@ -371,9 +371,11 @@ class Cinder(provider.Provider):
                      "{2} {3}".format(devpath, mp, docker_volume_name,
                                       cinder_volume))
             mounter = mount.Mounter()
-            return {"Name": docker_volume_name,
-                    "Mountpoint": mp if mp in mounter.get_mps_by_device(
+            return {'Name': docker_volume_name,
+                    'Mountpoint': mp if mp in mounter.get_mps_by_device(
                         devpath) else ''}
+        elif state in [NOT_ATTACH, ATTACH_TO_OTHER]:
+            return {'Name': docker_volume_name, 'Mountpoint': ''}
         elif state == UNKNOWN:
             msg = _LW("Can't find this volume '{0}' in "
                       "Cinder").format(docker_volume_name)
@@ -390,13 +392,21 @@ class Cinder(provider.Provider):
         LOG.info(_LI("Get docker volume {0} {1} with state "
                      "{2}").format(docker_volume_name, cinder_volume, state))
 
-        if state != ATTACH_TO_THIS:
-            msg = _("Volume {0} is not in correct state, current state "
-                    "is {1}").format(docker_volume_name, state)
+        connector = self._get_connector()
+        if state == NOT_ATTACH:
+            connector.connect_volume(cinder_volume)
+        elif state == ATTACH_TO_OTHER:
+            if cinder_volume.multiattach:
+                connector.connect_volume(cinder_volume)
+            else:
+                msg = _("Volume {0} {1} is not shareable").format(
+                    docker_volume_name, cinder_volume)
+                raise exceptions.FuxiException(msg)
+        elif state != ATTACH_TO_THIS:
+            msg = _("Volume {0} {1} is not in correct state, current state "
+                    "is {2}").format(docker_volume_name, cinder_volume, state)
             LOG.error(msg)
             raise exceptions.FuxiException(msg)
-
-        connector = self._get_connector()
 
         link_path = connector.get_device_path(cinder_volume)
         if not os.path.exists(link_path):
