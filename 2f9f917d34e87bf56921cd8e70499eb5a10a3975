@@ -1,0 +1,10 @@
+Code-Review+2: Antoni Segura Puimedon <celebdor@gmail.com>
+Code-Review+1: vikas choudhary <choudharyvikas16@gmail.com>
+Code-Review+2: Berezovsky Irena <irenab.dev@gmail.com>
+Workflow+1: Antoni Segura Puimedon <celebdor@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 25 Aug 2016 06:37:29 +0000
+Reviewed-on: https://review.openstack.org/353794
+Project: openstack/fuxi
+Branch: refs/heads/master
