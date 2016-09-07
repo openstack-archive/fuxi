@@ -1,0 +1,10 @@
+Code-Review+2: Zhang Ni <zhangni@huawei.com>
+Code-Review+1: Liping Mao <limao@cisco.com>
+Code-Review+2: Gal Sagie <gal.sagie@gmail.com>
+Workflow+1: Gal Sagie <gal.sagie@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 07 Sep 2016 18:53:46 +0000
+Reviewed-on: https://review.openstack.org/352298
+Project: openstack/fuxi
+Branch: refs/heads/master
