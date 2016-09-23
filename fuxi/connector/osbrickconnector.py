@@ -11,6 +11,7 @@
 # under the License.
 
 import os
+import time
 
 from os_brick.initiator import connector
 from oslo_concurrency import processutils
@@ -18,12 +19,16 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import excutils
 
-from fuxi.common import constants as consts
-from fuxi.connector import connector as fuxi_connector
-from fuxi.i18n import _LI, _LE
-from fuxi import utils
-
 from cinderclient import exceptions as cinder_exception
+from manilaclient.common.apiclient import exceptions as manila_exception
+
+from fuxi.common import constants as consts
+from fuxi.common import mount
+from fuxi.common import state_monitor
+from fuxi.connector import connector as fuxi_connector
+from fuxi import exceptions
+from fuxi.i18n import _LI, _LW, _LE
+from fuxi import utils
 
 CONF = cfg.CONF
 
@@ -167,3 +172,202 @@ class CinderConnector(fuxi_connector.Connector):
 
     def get_device_path(self, volume):
         return os.path.join(consts.VOLUME_LINK_DIR, volume.id)
+
+
+SHARE_PROTO = (NFS, GLUSTERFS) = ('NFS', 'GLUSTERFS')
+SHARE_ACCESS_TYPE = (IP, CERT) = ('ip', 'cert')
+# PROTO_ACCESS_TYPE_MAP
+# key: share protocol
+# value: possible supported access type
+PROTO_ACCESS_TYPE_MAP = {
+    NFS: (IP,),
+    GLUSTERFS: (CERT,)
+}
+
+
+class ManilaConnector(fuxi_connector.Connector):
+    """Manager share access and mount.
+
+    share access: ManilaConnector only support one access_type for
+    each share_proto that Fuxi implements. The constant
+    PROTO_ACCESS_TYPE_MAP record the supported share_proto and related
+    possible supported access_type. Particularly, we use the first access_type
+    as default when there are more than one access_type for share_proto, of
+    course, we could set this in config file with
+    conf.manila.proto_access_type_map
+    """
+    def __init__(self, manilaclient=None):
+        super(ManilaConnector, self).__init__()
+        if not manilaclient:
+            manilaclient = utils.get_manilaclient()
+        self.manilaclient = manilaclient
+        self._set_proto_access_type_map()
+
+    def _set_proto_access_type_map(self):
+        conf_proto_at_map = CONF.manila.proto_access_type_map
+        conf_proto_at_map = dict((k.upper(), v.lower())
+                                 for k, v in conf_proto_at_map.items())
+        unable_proto = [k for k in conf_proto_at_map.keys()
+                        if k not in PROTO_ACCESS_TYPE_MAP.keys()]
+        if unable_proto:
+            raise exceptions.InvalidProtocol(
+                "Find temporary unable share protocol {0}"
+                .format(unable_proto))
+
+        self.proto_access_type_map = dict()
+        for key, value in PROTO_ACCESS_TYPE_MAP.items():
+            if key in conf_proto_at_map:
+                if conf_proto_at_map[key] in value:
+                    self.proto_access_type_map[key] = conf_proto_at_map[key]
+                else:
+                    raise exceptions.InvalidAccessType(
+                        "Access type {0} is not enabled for share "
+                        "protocol {1}, please chose from {2}"
+                        .format(conf_proto_at_map[key],
+                                key,
+                                PROTO_ACCESS_TYPE_MAP[key]))
+            else:
+                self.proto_access_type_map[key] = value[0]
+
+    def _get_brick_connector(self, share):
+        protocol = share.share_proto
+        mount_point_base = os.path.join(CONF.volume_dir, 'manila')
+        conn = {'mount_point_base': mount_point_base}
+        return brick_get_connector(protocol, conn=conn)
+
+    def _get_access_to(self, access_type):
+        if access_type == IP:
+            access_to = CONF.my_ip
+            if not access_to:
+                raise exceptions.InvalidAccessTo(
+                    "The my_ip could not be None")
+            return access_to
+        elif access_type == CERT:
+            access_to = CONF.manila.access_to_for_cert
+            if not access_to:
+                raise exceptions.InvalidAccessTo(
+                    "The access_to_for_cert could not be None")
+            return CONF.manila.access_to_for_cert
+        raise exceptions.InvalidAccessType(
+            "The access type %s is not enabled" % access_type)
+
+    @utils.wrap_check_authorized
+    def check_access_allowed(self, share):
+        access_type = self.proto_access_type_map.get(share.share_proto, None)
+        if not access_type:
+            LOG.warning(_LW("The share_proto %s is not enabled currently"),
+                        share.share_proto)
+            return False
+
+        share_access_list = self.manilaclient.shares.access_list(share)
+        for access in share_access_list:
+            try:
+                if self._get_access_to(access_type) == access.access_to \
+                        and access.state == 'active':
+                    return True
+            except (exceptions.InvalidAccessType, exceptions.InvalidAccessTo):
+                pass
+        return False
+
+    def _access_allow(self, share):
+        share_proto = share.share_proto
+        if share_proto not in self.proto_access_type_map.keys():
+            raise exceptions.InvalidProtocol(
+                "Not enabled share protocol %s" % share_proto)
+
+        try:
+            if self.check_access_allowed(share):
+                return
+
+            access_type = self.proto_access_type_map[share_proto]
+            access_to = self._get_access_to(access_type)
+            LOG.info(_LI("Allow machine to access share %(shr)s with "
+                         "access_type %(type)s and access_to %(to)s"),
+                     {'shr': share, 'type': access_type, 'to': access_to})
+            self.manilaclient.shares.allow(share, access_type, access_to, 'rw')
+        except manila_exception.ClientException as e:
+            LOG.error(_LE("Failed to grant access for server, %s"), e)
+            raise
+
+        LOG.info(_LI("Waiting share %s access to be active"), share)
+        state_monitor.StateMonitor(
+            self.manilaclient, share,
+            'active',
+            ('new',)).monitor_share_access(access_type, access_to)
+
+    @utils.wrap_check_authorized
+    def connect_volume(self, share, **connect_opts):
+        self._access_allow(share)
+
+        conn_prop = {
+            'export': self.get_device_path(share),
+            'name': share.share_proto
+        }
+        path_info = self._get_brick_connector(share).connect_volume(conn_prop)
+        LOG.info(_LI("Connect share %(s)s successfully, path_info %(pi)s"),
+                 {'s': share, 'pi': path_info})
+        return {'path': share.export_location}
+
+    def _access_deny(self, share):
+        try:
+            share_access_list = self.manilaclient.shares.access_list(share)
+            share_proto = share.share_proto
+            access_type = self.proto_access_type_map.get(share_proto)
+            access_to = self._get_access_to(access_type)
+            for share_access in share_access_list:
+                if share_access.access_type == access_type \
+                        and share_access.access_to == access_to:
+                    self.manilaclient.shares.deny(share, share_access.id)
+                    break
+        except manila_exception.ClientException as e:
+            LOG.error(_LE("Error happened when revoking access for share "
+                          "%(s)s. Error: %(err)s"), {'s': share, 'err': e})
+            raise
+
+    @utils.wrap_check_authorized
+    def disconnect_volume(self, share, **disconnect_opts):
+        mountpoint = self.get_mountpoint(share)
+        mount.Mounter().unmount(mountpoint)
+
+        self._access_deny(share)
+
+        def _check_access_binded(s):
+            sal = self.manilaclient.shares.access_list(s)
+            share_proto = s.share_proto
+            access_type = self.proto_access_type_map.get(share_proto)
+            access_to = self._get_access_to(access_type)
+            for a in sal:
+                if a.access_type == access_type and a.access_to == access_to:
+                    if a.state in ('error', 'error_deleting'):
+                        raise exceptions.NotMatchedState(
+                            "Revoke access {0} failed".format(a))
+                    return True
+            return False
+
+        start_time = time.time()
+        while time.time() - start_time < consts.ACCSS_DENY_TIMEOUT:
+            if not _check_access_binded(share):
+                LOG.info(_LI("Disconnect share %s successfully"), share)
+                return
+            time.sleep(consts.SCAN_INTERVAL)
+
+        raise exceptions.TimeoutException("Disconnect volume timeout")
+
+    def get_device_path(self, share):
+        return share.export_location
+
+    def set_client(self):
+        self.manilaclient = utils.get_manilaclient()
+
+    @utils.wrap_check_authorized
+    def get_mountpoint(self, share):
+        if not self.check_access_allowed(share):
+            return ''
+
+        conn_prop = {
+            'export': self.get_device_path(share),
+            'name': share.share_proto
+        }
+        brick_connector = self._get_brick_connector(share)
+        volume_paths = brick_connector.get_volume_paths(conn_prop)
+        return volume_paths[0].rsplit('/', 1)[0]
