@@ -16,10 +16,17 @@ __all__ = [
 
 import itertools
 
+from oslo_config import cfg
+
 from fuxi.common import config
+
+CONF = cfg.CONF
 
 
 def list_fuxi_opts():
-    return [('DEFAULT', itertools.chain(config.default_opts,)),
-            ('keystone', itertools.chain(config.keystone_opts,)),
-            ('cinder', itertools.chain(config.cinder_opts,)), ]
+    return [
+        ('DEFAULT', itertools.chain(config.default_opts,)),
+        (CONF.keystone._group.name, itertools.chain(config.keystone_opts,)),
+        (CONF.cinder._group.name, itertools.chain(config.cinder_opts,)),
+        (CONF.manila._group.name, itertools.chain(config.manila_opts)),
+    ]
