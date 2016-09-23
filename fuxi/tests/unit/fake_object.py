@@ -49,3 +49,35 @@ class FakeCinderVolume(object):
         self.display_name = name
 
     name = property(get_name, set_name)
+
+
+fake_share = {
+    'id': DEFAULT_VOLUME_ID,
+    'name': DEFAULT_VOLUME_NAME,
+    'export_location': '192.168.0.1:/tmp/share',
+    'share_proto': 'NFS'
+}
+
+
+class FakeManilaShare(object):
+    def __init__(self, **kwargs):
+        share = copy.deepcopy(fake_share)
+        share.update(kwargs)
+        for key, value in share.items():
+            setattr(self, key, value)
+
+
+fake_share_access = {
+    'share_id': 'efd46583-4bf7-40d5-a027-2ee3dbe74f56',
+    'access_type': 'ip',
+    'access_to': '192.168.0.1',
+    'access_level': 'rw'
+}
+
+
+class FakeShareAccess(object):
+    def __init__(self, **kwargs):
+        share_access = copy.deepcopy(fake_share_access)
+        share_access.update(kwargs)
+        for key, value in share_access.items():
+            setattr(self, key, value)
