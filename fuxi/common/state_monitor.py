@@ -17,6 +17,8 @@ from fuxi import exceptions
 from fuxi.i18n import _LE
 
 from cinderclient import exceptions as cinder_exception
+from manilaclient.openstack.common.apiclient import exceptions \
+    as manila_exception
 
 from oslo_log import log as logging
 
@@ -80,5 +82,47 @@ class StateMonitor(object):
 
             if self._reached_desired_state(volume.status):
                 return volume
+
+            time.sleep(self.time_delay)
+
+    def monitor_manila_share(self):
+        while True:
+            try:
+                share = self.client.shares.get(self.expected_obj.id)
+            except manila_exception.ClientException:
+                elapsed_time = time.time() - self.start_time
+                if elapsed_time > self.time_limit:
+                    msg = _LE("Timed out while waiting for share. "
+                              "Expected Share: {0}, "
+                              "Expected State: {1}, "
+                              "Elapsed Time: {2}").format(self.expected_obj,
+                                                          self.desired_state,
+                                                          elapsed_time)
+                    raise exceptions.TimeoutException(msg)
+                raise
+
+            if self._reached_desired_state(share.status):
+                return share
+
+            time.sleep(self.time_delay)
+
+    def monitor_share_access(self, access_type, access_to):
+        while True:
+            try:
+                al = self.client.shares.access_list(self.expected_obj.id)
+            except manila_exception.ClientException:
+                elapsed_time = time.time() - self.start_time
+                if elapsed_time > self.time_limit:
+                    msg = _LE("Timed out while waiting for share access. "
+                              "Expected State: {0}, "
+                              "Elapsed Time: {1}").format(self.desired_state,
+                                                          elapsed_time)
+                    raise exceptions.TimeoutException(msg)
+                raise
+
+            for a in al:
+                if a.access_type == access_type and a.access_to == access_to:
+                    if self._reached_desired_state(a.state):
+                        return self.expected_obj
 
             time.sleep(self.time_delay)
