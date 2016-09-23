@@ -20,7 +20,11 @@ from fuxi.common import config
 
 
 def list_fuxi_opts():
-    return [('DEFAULT', itertools.chain(config.default_opts,)),
-            ('keystone', itertools.chain(config.legacy_keystone_opts,)),
-            ('cinder', itertools.chain(config.cinder_opts,)),
-            (config.CFG_GROUP, itertools.chain(config.keystone_auth_opts,)), ]
+    return [
+        ('DEFAULT', itertools.chain(config.default_opts,)),
+        ('keystone', itertools.chain(config.legacy_keystone_opts,)),
+        ('cinder', itertools.chain(config.cinder_opts,)),
+        (config.CFG_GROUP, itertools.chain(config.keystone_auth_opts,)),
+        (config.manila_group.name, itertools.chain(config.manila_opts)),
+        (config.manila_group.name, itertools.chain(config.keystone_auth_opts))
+    ]
