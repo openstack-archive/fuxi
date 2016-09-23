@@ -11,6 +11,7 @@
 # under the License.
 
 import os
+import time
 
 from os_brick.initiator import connector
 from oslo_concurrency import processutils
@@ -19,11 +20,16 @@ from oslo_log import log as logging
 from oslo_utils import excutils
 
 from fuxi.common import constants as consts
+from fuxi.common import mount
+from fuxi.common import state_monitor
 from fuxi.connector import connector as fuxi_connector
+from fuxi import exceptions
 from fuxi.i18n import _LI, _LE
 from fuxi import utils
 
 from cinderclient import exceptions as cinder_exception
+from manilaclient.openstack.common.apiclient import exceptions \
+    as manila_exception
 
 CONF = cfg.CONF
 
@@ -172,3 +178,104 @@ class CinderConnector(fuxi_connector.Connector):
 
     def get_device_path(self, volume):
         return os.path.join(consts.VOLUME_LINK_DIR, volume.id)
+
+
+class ManilaConnector(fuxi_connector.Connector):
+    def __init__(self, manilaclient=None):
+        super(ManilaConnector, self).__init__()
+        if not manilaclient:
+            manilaclient = utils.get_manilaclient()
+        self.manilaclient = manilaclient
+
+    def _get_brick_connector(self, share):
+        protocol = share.share_proto
+        mount_point_base = os.path.join(CONF.volume_dir, 'manila')
+        conn = {'mount_point_base': mount_point_base}
+        return brick_get_connector(protocol, conn=conn)
+
+    @utils.wrap_check_authorized
+    def check_access_allowed(self, share):
+        share_access_list = self.manilaclient.shares.access_list(share)
+        for access in share_access_list:
+            if access.state == 'active' and access.access_type == 'ip' \
+                    and access.access_to == CONF.my_ip:
+                return True
+        return False
+
+    @utils.wrap_check_authorized
+    def connect_volume(self, share, **connect_opts):
+        try:
+            if not self.check_access_allowed(share):
+                self.manilaclient.shares.allow(share, 'ip', CONF.my_ip, 'rw')
+        except manila_exception.ClientException as e:
+            LOG.error(_LE("Failed to grant access for server, %s"), e)
+            raise
+
+        state_monitor.StateMonitor(
+            self.manilaclient, share,
+            'active',
+            ('new',)).monitor_share_access()
+
+        conn_prop = {
+            'export': self.get_device_path(share),
+            'name': share.share_proto
+        }
+        path_info = self._get_brick_connector(share).connect_volume(conn_prop)
+        LOG.info("Connect share %(s)s successfully, path_info=%(pi)s",
+                 {'s': share, 'pi': path_info})
+        return {'path': share.export_location}
+
+    @utils.wrap_check_authorized
+    def disconnect_volume(self, share, **disconnect_opts):
+        mountpoint = self.get_mountpoint(share)
+        mount.Mounter().unmount(mountpoint)
+
+        try:
+            share_access_list = self.manilaclient.shares.access_list(share)
+            for share_access in share_access_list:
+                if share_access.access_type == 'ip' \
+                        and share_access.access_to == CONF.my_ip:
+                    self.manilaclient.shares.deny(share, share_access.id)
+                    break
+        except manila_exception.ClientException as e:
+            LOG.error(_LE("Error happened when revoking access for share "
+                          "%(s)s. Error: %(err)s"), {'s': share, 'err': e})
+            raise
+
+        def _check_access_binded(s):
+            sal = self.manilaclient.shares.access_list(s)
+            for a in sal:
+                if a.access_type == 'ip' and a.access_to == CONF.my_ip:
+                    if a.state == 'error':
+                        raise exceptions.NotMatchedState(
+                            "Revoke access {0} failed".format(a))
+                    return True
+            return False
+
+        start_time = time.time()
+        while time.time() - start_time < consts.ACCSS_DENY_TIMEOUT:
+            if not _check_access_binded(share):
+                LOG.info(_LI("Disconnect share %s successfully"), share)
+                return
+            time.sleep(consts.SCAN_INTERVAL)
+
+        raise exceptions.TimeoutException("Disconnect volume timeout")
+
+    def get_device_path(self, share):
+        return share.export_location
+
+    def set_client(self):
+        self.manilaclient = utils.get_manilaclient()
+
+    @utils.wrap_check_authorized
+    def get_mountpoint(self, share):
+        if not self.check_access_allowed(share):
+            return ''
+
+        conn_prop = {
+            'export': self.get_device_path(share),
+            'name': share.share_proto
+        }
+        brick_connector = self._get_brick_connector(share)
+        volume_paths = brick_connector.get_volume_paths(conn_prop)
+        return volume_paths[0].rsplit('/', 1)[0]

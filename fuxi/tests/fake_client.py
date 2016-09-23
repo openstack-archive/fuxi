@@ -82,7 +82,51 @@ class FakeNovaClient(object):
 
 class FakeOSBrickConnector(object):
     def connect_volume(self, connection_properties):
-        pass
+        return {'path': 'fake-path'}
 
     def disconnect_volume(self, connection_properties, device_info):
         pass
+
+    def get_volume_paths(self, connection_properties):
+        return ['/fuxi/data/fake-vol']
+
+
+class FakeManilaClient(object):
+    class Shares(object):
+        def get(self, share):
+            try:
+                return fake_object.FakeManilaShare(id=share.id)
+            except AttributeError:
+                return fake_object.FakeManilaShare(id=share)
+
+        def create(self, *args, **kawrgs):
+            pass
+
+        def list(self):
+            return []
+
+        def allow(self, share, access_type, access, access_level):
+            pass
+
+        def deny(self, share, share_access_id):
+            pass
+
+        def access_list(self, share):
+            return []
+
+        def update(self, **kwargs):
+            pass
+
+        def update_all_metadata(self, share, metadata):
+            share.metadata.update(**metadata)
+
+    class ShareNetworks(object):
+        def list(self):
+            return []
+
+        def create(self):
+            pass
+
+    def __init__(self):
+        self.shares = self.Shares()
+        self.share_networks = self.ShareNetworks()

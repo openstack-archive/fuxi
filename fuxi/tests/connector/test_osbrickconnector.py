@@ -17,12 +17,15 @@ import socket
 import sys
 
 from fuxi.common import constants
+from fuxi.common import mount
+from fuxi.common import state_monitor
 from fuxi.connector import osbrickconnector
 from fuxi.tests import base, fake_client, fake_object
 from fuxi import utils
 
 from cinderclient import exceptions as cinder_exception
-
+from manilaclient.openstack.common.apiclient import exceptions \
+    as manila_exception
 from oslo_concurrency import processutils
 
 
@@ -166,3 +169,58 @@ class TestCinderConnector(base.TestCase):
         self.assertEqual(os.path.join(constants.VOLUME_LINK_DIR,
                                       fake_cinder_volume.id),
                          self.connector.get_device_path(fake_cinder_volume))
+
+
+class TestManilaConncetor(base.TestCase):
+    def setUp(self):
+        base.TestCase.setUp(self)
+        self._set_connector()
+
+    @mock.patch.object(utils, 'get_manilaclient',
+                       return_value=fake_client.FakeManilaClient())
+    def _set_connector(self, mock_client):
+        self.connector = osbrickconnector.ManilaConnector()
+        self.connector.manilaclient = fake_client.FakeManilaClient()
+        self.connector._get_brick_connector = mock.MagicMock()
+        self.connector._get_brick_connector.return_value \
+            = fake_client.FakeOSBrickConnector()
+
+    def test_connect_volume(self):
+        fake_share = fake_object.FakeManilaShare()
+        with mock.patch.object(state_monitor.StateMonitor,
+                               'monitor_share_access'):
+            self.assertEqual(fake_share.export_location,
+                             self.connector.connect_volume(fake_share)['path'])
+
+    def test_connect_volume_failed(self):
+        fake_share = fake_object.FakeManilaShare()
+        with mock.patch('fuxi.tests.fake_client.FakeManilaClient.Shares.allow',
+                        side_effect=manila_exception.ClientException(500)):
+            self.assertRaises(manila_exception.ClientException,
+                              self.connector.connect_volume,
+                              fake_share)
+
+    @mock.patch.object(mount.Mounter, 'unmount')
+    def test_disconnect_volume(self, mock_unmount):
+        fake_share = fake_object.FakeManilaShare()
+        self.assertIsNone(self.connector.disconnect_volume(fake_share))
+
+    def test_get_device_path(self):
+        fake_manila_share = fake_object.FakeManilaShare()
+        self.assertEqual(fake_manila_share.export_location,
+                         self.connector.get_device_path(fake_manila_share))
+
+    def test_get_mountpoint(self):
+        fake_manila_share = fake_object.FakeManilaShare()
+        with mock.patch.object(self.connector, 'check_access_allowed',
+                               return_value=False):
+            self.assertEqual('',
+                             self.connector.get_mountpoint(fake_manila_share))
+        with mock.patch.object(self.connector, 'check_access_allowed',
+                               return_value=True):
+            with mock.patch.object(fake_client.FakeOSBrickConnector,
+                                   'get_volume_paths',
+                                   return_value=['/fuxi/data/fake-vol/nfs']):
+                self.assertEqual('/fuxi/data/fake-vol',
+                                 self.connector.get_mountpoint(
+                                     fake_manila_share))

@@ -24,6 +24,9 @@ from cinderclient import client as cinder_client
 from cinderclient import exceptions as cinder_exception
 from keystoneauth1.session import Session
 from keystoneclient.auth import get_plugin_class
+from manilaclient import client as manila_client
+from manilaclient.openstack.common.apiclient import exceptions \
+    as manila_exception
 from novaclient import client as nova_client
 from novaclient import exceptions as nova_exception
 from os_brick import exception as brick_exception
@@ -96,6 +99,7 @@ def make_json_app(import_name, **kwargs):
     @app.errorhandler(exceptions.FuxiException)
     @app.errorhandler(cinder_exception.ClientException)
     @app.errorhandler(nova_exception.ClientException)
+    @app.errorhandler(manila_exception.ClientException)
     @app.errorhandler(processutils.ProcessExecutionError)
     @app.errorhandler(brick_exception.BrickException)
     def make_json_error(ex):
@@ -176,6 +180,16 @@ def get_novaclient(session=None, region=None, **kwargs):
                               version=2)
 
 
+def get_manilaclient(session=None, region=None):
+    if not session:
+        session = get_keystone_session()
+    if not region:
+        region = CONF.keystone['region']
+    return manila_client.Client(session=get_keystone_session(),
+                                region_name=region,
+                                client_version='2')
+
+
 def get_root_helper():
     return 'sudo fuxi-rootwrap %s' % CONF.rootwrap_config
 
@@ -185,3 +199,18 @@ def execute(*cmd, **kwargs):
         kwargs['root_helper'] = get_root_helper()
 
     return processutils.execute(*cmd, **kwargs)
+
+
+def wrap_check_authorized(f):
+    """If token is expired, then build a new client, and try again.
+
+    This method required the related object(cls) has method set_client().
+    method set_client() is used to reset OpenStack *client.
+    """
+    def func(cls, *args, **kwargs):
+        try:
+            return f(cls, *args, **kwargs)
+        except manila_exception.Unauthorized:
+            cls.set_client()
+            return f(cls, *args, **kwargs)
+    return func
