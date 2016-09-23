@@ -22,4 +22,5 @@ from fuxi.common import config
 def list_fuxi_opts():
     return [('DEFAULT', itertools.chain(config.default_opts,)),
             ('keystone', itertools.chain(config.keystone_opts,)),
-            ('cinder', itertools.chain(config.cinder_opts,)), ]
+            ('cinder', itertools.chain(config.cinder_opts,)),
+            ('manila', itertools.chain(config.manila_opts)), ]
