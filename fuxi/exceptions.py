@@ -58,3 +58,11 @@ class UnmountException(FuxiException):
 
 class FileNotFound(FuxiException):
     """The expected file not exist"""
+
+
+class InvalidProtocol(FuxiException):
+    """The given protocol is invalid"""
+
+
+class InvalidAccessType(FuxiException):
+    """The given access type is invalid"""
