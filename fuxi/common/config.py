@@ -108,11 +108,35 @@ nova_group = cfg.OptGroup(
     title='Nova Options',
     help=_('Configuration options for OpenStack Nova'))
 
+manila_group = cfg.OptGroup(
+    'manila',
+    title='Manila Options',
+    help=_('Configuration options for OpenStack Manila'))
+
+manila_opts = [
+    cfg.StrOpt('volume_connector',
+               default='osbrick',
+               help=_('Volume connector for attach share to this server, '
+                      'or detach share from this server.')),
+    cfg.StrOpt('share_proto',
+               default='NFS',
+               help=_('Default protocol for manila share.')),
+    cfg.DictOpt('proto_access_type_map',
+                default={},
+                help=_('Set the access type for client to access share.')),
+    cfg.StrOpt('availability_zone',
+               default=None,
+               help=_('AZ in which the share is going to create.'))
+]
 
 CONF = cfg.CONF
 CONF.register_opts(default_opts)
 CONF.register_opts(legacy_keystone_opts, group='keystone')
 CONF.register_opts(cinder_opts, group='cinder')
+
+CONF.register_group(manila_group)
+CONF.register_opts(manila_opts, group=manila_group)
+kuryr_config.register_keystoneauth_opts(CONF, manila_group.name)
 
 CFG_GROUP = 'cinder'
 
