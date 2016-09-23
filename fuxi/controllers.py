@@ -26,9 +26,11 @@ from fuxi import utils
 CONF = cfg.CONF
 
 CINDER = 'cinder'
+MANILA = 'manila'
 
 volume_providers_conf = {
-    CINDER: 'fuxi.volumeprovider.cinder.Cinder', }
+    CINDER: 'fuxi.volumeprovider.cinder.Cinder',
+    MANILA: 'fuxi.volumeprovider.manila.Manila', }
 
 
 def init_app_conf():
