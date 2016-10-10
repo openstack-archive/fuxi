@@ -126,33 +126,36 @@ class Cinder(provider.Provider):
         return importutils.import_class(volume_connector_conf[connector])()
 
     def _get_docker_volume(self, docker_volume_name):
-        LOG.info(_LI("Retrieve docker volume {0} from "
-                     "Cinder").format(docker_volume_name))
-
         try:
-            host_id = get_host_id()
-
-            volume_connector = cinder_conf.volume_connector
             search_opts = {'name': docker_volume_name,
                            'metadata': {consts.VOLUME_FROM: CONF.volume_from}}
-            for vol in self.cinderclient.volumes.list(search_opts=search_opts):
-                if vol.name == docker_volume_name:
-                    if vol.attachments:
-                        for am in vol.attachments:
-                            if volume_connector == OPENSTACK:
-                                if am['server_id'] == host_id:
-                                    return vol, ATTACH_TO_THIS
-                            elif volume_connector == OSBRICK:
-                                if (am['host_name'] or '').lower() == host_id:
-                                    return vol, ATTACH_TO_THIS
-                        return vol, ATTACH_TO_OTHER
-                    else:
-                        return vol, NOT_ATTACH
-            return None, UNKNOWN
+            vols = self.cinderclient.volumes.list(search_opts=search_opts)
         except cinder_exception.ClientException as ex:
             LOG.error(_LE("Error happened while getting volume list "
-                          "information from cinder. Error: {0}").format(ex))
+                          "information from cinder. Error: %s"), ex)
             raise
+
+        vol_num = len(vols)
+        if vol_num == 1:
+            docker_volume = vols[0]
+            if docker_volume.attachments:
+                volume_connector = cinder_conf.volume_connector
+                host_id = get_host_id()
+                for am in docker_volume.attachments:
+                    if volume_connector == OPENSTACK:
+                        if am['server_id'] == host_id:
+                            return docker_volume, ATTACH_TO_THIS
+                    elif volume_connector == OSBRICK:
+                        if (am['host_name'] or '').lower() == host_id:
+                            return docker_volume, ATTACH_TO_THIS
+                return docker_volume, ATTACH_TO_OTHER
+            else:
+                return docker_volume, NOT_ATTACH
+        elif vol_num == 0:
+            return None, UNKNOWN
+        else:
+            raise exceptions.TooManyResources(
+                "find too many volumes with search_opts=%s" % search_opts)
 
     def _check_attached_to_this(self, cinder_volume):
         host_id = get_host_id()
