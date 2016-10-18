@@ -317,6 +317,14 @@ class TestCinder(base.TestCase):
         self.assertRaises(cinder_exception.ClientException,
                           self.cinderprovider.list)
 
+    def test_list_with_many_matched_volumes(self):
+        fake_vols = [fake_object.FakeCinderVolume(name='fake-vol1'),
+                    fake_object.FakeCinderVolume(name='fake-vol2')]
+        with mock.patch.object(fake_client.FakeCinderClient.Volumes, 'list',
+                               return_value=fake_vols):
+            self.assertRaises(exceptions.TooManyResources,
+                              self.cinderprovider.list)
+
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
     @mock.patch.object(utils, 'execute')
     @mock.patch.object(cinder.Cinder, '_get_docker_volume',
