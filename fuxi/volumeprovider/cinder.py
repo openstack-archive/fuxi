@@ -218,6 +218,11 @@ class Cinder(provider.Provider):
                 raise exceptions.NotMatchedState(
                     'Cinder volume is unavailable')
 
+        if consts.VOLUME_FROM in cinder_volume.metadata:
+            raise exceptions.UsedByOtherCluster(
+                'The Cinder volume %s is being used by another fuxi cluster'
+                % cinder_volume)
+
         if cinder_volume.name != docker_volume_name:
             LOG.error(_LE("Provided volume name %(d_name)s does not match "
                           "with existing Cinder volume name %(c_name)s"),

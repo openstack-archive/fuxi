@@ -23,7 +23,6 @@ base_cinder_volume = {
     'display_name': DEFAULT_VOLUME_NAME,
     'metadata': {
         'readonly': 'False',
-        'volume_from': 'fuxi',
         'fstype': 'ext4',
     },
     'status': 'available',
