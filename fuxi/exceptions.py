@@ -58,3 +58,7 @@ class UnmountException(FuxiException):
 
 class FileNotFound(FuxiException):
     """The expected file not exist"""
+
+
+class UsedByOtherCluster(FuxiException):
+    """The requested volume is being used by another fuxi cluster"""

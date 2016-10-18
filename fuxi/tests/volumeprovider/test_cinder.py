@@ -152,6 +152,29 @@ class TestCinder(base.TestCase):
                           fake_volume_name,
                           {'volume_id': DEFAULT_VOLUME_ID})
 
+    def test_create_from_volume_using_by_other_cluster(self):
+        fake_server_id = 'fake_server_123'
+        fake_host_name = 'attached_to_other'
+        fake_volume_name = 'fake_vol'
+        fake_volume_args = {'volume_id': DEFAULT_VOLUME_ID,
+                            'status': 'in-use',
+                            'multiattach': True,
+                            'attachments': [{'server_id': fake_server_id,
+                                             'host_name': fake_host_name}],
+                            'metadata': {consts.VOLUME_FROM: 'other_fc'}}
+        fake_cinder_volume = fake_object.FakeCinderVolume(**fake_volume_args)
+        self.cinderprovider._get_docker_volume = mock.MagicMock()
+        self.cinderprovider._get_docker_volume.return_value \
+            = (fake_cinder_volume,
+               consts.UNKNOWN)
+        self.cinderprovider.cinderclient.volumes.get = mock.MagicMock()
+        self.cinderprovider.cinderclient.volumes.get.return_value = \
+            fake_cinder_volume
+        self.assertRaises(exceptions.UsedByOtherCluster,
+                          self.cinderprovider.create,
+                          fake_volume_name,
+                          {'volume_id': DEFAULT_VOLUME_ID})
+
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
     def test_create_with_volume_attach_to_this(self):
         fake_server_id = 'fake_server_123'
