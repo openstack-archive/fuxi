@@ -304,8 +304,11 @@ class TestCinder(base.TestCase):
 
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
     def test_list(self):
-        docker_volumes = self.cinderprovider.list()
-        self.assertEqual(docker_volumes, [])
+        fake_vols = [fake_object.FakeCinderVolume(name='fake-vol1')]
+        with mock.patch.object(fake_client.FakeCinderClient.Volumes, 'list',
+                               return_value=fake_vols):
+            self.assertEqual([{'Name': 'fake-vol1', 'Mountpoint': ''}],
+                             self.cinderprovider.list())
 
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
     @mock.patch('fuxi.tests.fake_client.FakeCinderClient.Volumes.list',
