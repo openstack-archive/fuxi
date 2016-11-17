@@ -11,7 +11,7 @@ Ubuntu
 
 ::
 
-    $ sudo apt-get install python-dev
+    $ sudo apt-get install python-dev git python-pip libffi-dev
     $ sudo apt-get install open-iscsi  # Install when using iSCSI client to connect remote volume
     $ sudo apt-get install sysfsutils  # Install when os_brick package and iSCSI client used
 
@@ -27,6 +27,8 @@ CentOS
 
 ::
 
+    $ git clone https://github.com/openstack/fuxi.git
+    $ cd fuxi
     $ sudo pip install -r requirements.txt
 
 
@@ -37,7 +39,7 @@ Installing Fuxi
 
 ::
 
-    $ python setup.py install
+    $ sudo python setup.py install
 
 Configuring Fuxi
 ----------------
