@@ -11,7 +11,7 @@ Ubuntu
 
 ::
 
-    $ sudo apt-get install python-dev
+    $ sudo apt-get install python-dev git python-pip libffi-dev libssl-dev
     $ sudo apt-get install open-iscsi  # Install when using iSCSI client to connect remote volume
     $ sudo apt-get install sysfsutils  # Install when os_brick package and iSCSI client used
 
@@ -27,6 +27,8 @@ CentOS
 
 ::
 
+    $ git clone https://github.com/openstack/fuxi.git
+    $ cd fuxi
     $ sudo pip install -r requirements.txt
 
 
@@ -37,7 +39,7 @@ Installing Fuxi
 
 ::
 
-    $ python setup.py install
+    $ sudo python setup.py install
 
 Configuring Fuxi
 ----------------
@@ -82,7 +84,7 @@ For non-root user
 
 ::
 
-    $ echo "fuxi ALL=(root) NOPASSWD: /usr/local/bin/fuxi-rootwrap /etc/fuxi/rootwrap.conf *" > /etc/sudoers.d/fuxi-rootwrap
+    $ echo "fuxi ALL=(root) NOPASSWD: /usr/local/bin/fuxi-rootwrap /etc/fuxi/rootwrap.conf *" | sudo tee /etc/sudoers.d/fuxi-rootwrap
 
 Here user `fuxi` should be changed to the user run `fuxi-server` on your host.
 
@@ -94,6 +96,11 @@ Start `fuxi-server`
 Testing Fuxi
 ------------
 
+Install Docker
+::
+    $ curl -fsSL https://get.docker.com/ | sudo sh
+
+Test Fuxi
 ::
 
     $ docker volume create --driver fuxi --name test_vol -o size=1 -o fstype=ext4 -o multiattach=true
