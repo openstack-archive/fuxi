@@ -1,0 +1,9 @@
+Code-Review+2: Berezovsky Irena <irenab.dev@gmail.com>
+Code-Review+2: Zhang Ni <zhangni@huawei.com>
+Workflow+1: Zhang Ni <zhangni@huawei.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 22 Nov 2016 09:47:30 +0000
+Reviewed-on: https://review.openstack.org/399282
+Project: openstack/fuxi
+Branch: refs/heads/master
