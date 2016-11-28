@@ -20,7 +20,7 @@ from fuxi.common import constants as consts
 from fuxi.common import mount
 from fuxi.common import state_monitor
 from fuxi import exceptions
-from fuxi.tests import base, fake_client, fake_object
+from fuxi.tests.unit import base, fake_client, fake_object
 from fuxi import utils
 from fuxi.volumeprovider import cinder
 
@@ -95,7 +95,7 @@ class TestCinder(base.TestCase):
     @mock.patch.object(cinder.Cinder, '_get_docker_volume',
                        return_value=(fake_object.FakeCinderVolume(
                            status='unknown'), consts.UNKNOWN))
-    @mock.patch('fuxi.tests.fake_client.FakeCinderClient.Volumes.get',
+    @mock.patch('fuxi.tests.unit.fake_client.FakeCinderClient.Volumes.get',
                 side_effect=cinder_exception.ClientException(404))
     def test_create_from_volume_id_with_volume_not_exist(self,
                                                          mocK_docker_volume,
@@ -256,7 +256,7 @@ class TestCinder(base.TestCase):
     @mock.patch.object(FakeCinderConnector,
                        'get_device_path',
                        mock_device_path_for_delete)
-    @mock.patch('fuxi.tests.fake_client.FakeCinderClient.Volumes.delete',
+    @mock.patch('fuxi.tests.unit.fake_client.FakeCinderClient.Volumes.delete',
                 side_effect=cinder_exception.ClientException(500))
     def test_delete_failed(self, mock_execute, mock_delete):
         fd, tmpfname = tempfile.mkstemp()
@@ -311,7 +311,7 @@ class TestCinder(base.TestCase):
                              self.cinderprovider.list())
 
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
-    @mock.patch('fuxi.tests.fake_client.FakeCinderClient.Volumes.list',
+    @mock.patch('fuxi.tests.unit.fake_client.FakeCinderClient.Volumes.list',
                 side_effect=cinder_exception.ClientException(500))
     def test_list_failed(self, mock_list):
         self.assertRaises(cinder_exception.ClientException,
