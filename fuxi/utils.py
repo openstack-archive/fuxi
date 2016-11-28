@@ -12,8 +12,10 @@
 
 import flask
 import os
+import random
 import requests
 import socket
+import string
 import traceback
 
 from fuxi.common import constants
@@ -185,3 +187,7 @@ def execute(*cmd, **kwargs):
         kwargs['root_helper'] = get_root_helper()
 
     return processutils.execute(*cmd, **kwargs)
+
+
+def get_random_string(n=10):
+    return ''.join(random.choice(string.ascii_lowercase) for _ in range(n))
