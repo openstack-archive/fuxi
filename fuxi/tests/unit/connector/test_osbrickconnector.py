@@ -18,7 +18,7 @@ import sys
 
 from fuxi.common import constants
 from fuxi.connector import osbrickconnector
-from fuxi.tests import base, fake_client, fake_object
+from fuxi.tests.unit import base, fake_client, fake_object
 from fuxi import utils
 
 from cinderclient import exceptions as cinder_exception
@@ -93,7 +93,7 @@ class TestCinderConnector(base.TestCase):
     @mock.patch.object(osbrickconnector, 'brick_get_connector_properties',
                        mock_get_connector_properties)
     @mock.patch.object(utils, 'execute')
-    @mock.patch('fuxi.tests.fake_client.FakeCinderClient.Volumes'
+    @mock.patch('fuxi.tests.unit.fake_client.FakeCinderClient.Volumes'
                 '.initialize_connection',
                 side_effect=cinder_exception.ClientException(500))
     def test_disconnect_volume_no_connection_info(self, mock_execute,
@@ -117,7 +117,7 @@ class TestCinderConnector(base.TestCase):
                        return_value={'driver_volume_type': 'fake_proto',
                                      'data': {'path': '/dev/0'}})
     @mock.patch.object(utils, 'execute')
-    @mock.patch('fuxi.tests.fake_client.FakeOSBrickConnector'
+    @mock.patch('fuxi.tests.unit.fake_client.FakeOSBrickConnector'
                 '.disconnect_volume',
                 side_effect=processutils.ProcessExecutionError())
     def test_disconnect_volume_osbrick_disconnect_failed(self, mock_connector,
@@ -136,7 +136,7 @@ class TestCinderConnector(base.TestCase):
                           self.connector.disconnect_volume,
                           fake_cinder_volume)
 
-    @mock.patch('fuxi.tests.fake_client.FakeCinderClient.Volumes.detach',
+    @mock.patch('fuxi.tests.unit.fake_client.FakeCinderClient.Volumes.detach',
                 side_effect=cinder_exception.ClientException(500))
     @mock.patch.object(osbrickconnector, 'brick_get_connector',
                        return_value=fake_client.FakeOSBrickConnector())

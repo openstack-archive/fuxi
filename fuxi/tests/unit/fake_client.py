@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from fuxi.tests import fake_object
+from fuxi.tests.unit import fake_object
 
 from cinderclient import exceptions as cinder_exception
 
