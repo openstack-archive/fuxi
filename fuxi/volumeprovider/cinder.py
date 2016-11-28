@@ -392,9 +392,9 @@ class Cinder(provider.Provider):
         else:
             msg = _LE("Volume %(vol_name)s %(c_vol)s "
                       "state %(state) is invalid")
-            LOG.error(msg, {'vol_name': docker_volume_name,
-                            'c-vol': cinder_volume,
-                            'state': state})
+            LOG.error(msg.format({'vol_name': docker_volume_name,
+                                  'c_vol': cinder_volume,
+                                  'state': state}))
             raise exceptions.NotMatchedState()
 
     def list(self):
@@ -471,9 +471,9 @@ class Cinder(provider.Provider):
         elif state != ATTACH_TO_THIS:
             msg = _("Volume %(vol_name)s %(c_vol)s is not in correct state, "
                     "current state is %(state)s")
-            LOG.error(msg, {'vol_name': docker_volume_name,
-                            'c-vol': cinder_volume,
-                            'state': state})
+            LOG.error(msg.format({'vol_name': docker_volume_name,
+                                  'c_vol': cinder_volume,
+                                  'state': state}))
             raise exceptions.NotMatchedState()
 
         link_path = connector.get_device_path(cinder_volume)

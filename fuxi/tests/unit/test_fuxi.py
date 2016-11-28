@@ -26,7 +26,7 @@ from fuxi import app
 from fuxi.common import config
 from fuxi.controllers import volume_providers_conf
 from fuxi import exceptions
-from fuxi.tests import base
+from fuxi.tests.unit import base
 
 from oslo_serialization import jsonutils
 
