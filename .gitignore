@@ -1,5 +1,6 @@
 fuxi.egg-info
 .tox
+.testrepository
 *.pyc
 
 # generated config file
