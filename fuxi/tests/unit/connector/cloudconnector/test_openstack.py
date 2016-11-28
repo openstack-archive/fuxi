@@ -17,7 +17,7 @@ from fuxi.common import constants
 from fuxi.common import state_monitor
 from fuxi.connector.cloudconnector import openstack
 from fuxi import utils
-from fuxi.tests import base, fake_client, fake_object
+from fuxi.tests.unit import base, fake_client, fake_object
 
 from cinderclient import exceptions as cinder_exception
 from novaclient import exceptions as nova_exception
@@ -68,7 +68,7 @@ class TestCinderConnector(base.TestCase):
         result = self.connector.disconnect_volume(fake_cinder_volume)
         self.assertIsNone(result)
 
-    @mock.patch('fuxi.tests.fake_client.FakeCinderClient.Volumes.get',
+    @mock.patch('fuxi.tests.unit.fake_client.FakeCinderClient.Volumes.get',
                 side_effect=cinder_exception.ClientException(404))
     @mock.patch.object(utils, 'execute')
     @mock.patch.object(state_monitor.StateMonitor,
@@ -80,7 +80,7 @@ class TestCinderConnector(base.TestCase):
                           self.connector.disconnect_volume,
                           fake_cinder_volume)
 
-    @mock.patch('fuxi.tests.fake_client.FakeNovaClient.Volumes'
+    @mock.patch('fuxi.tests.unit.fake_client.FakeNovaClient.Volumes'
                 '.delete_server_volume',
                 side_effect=nova_exception.ClientException(500))
     @mock.patch.object(utils, 'get_instance_uuid', return_value='fake-123')
