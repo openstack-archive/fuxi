@@ -140,6 +140,7 @@ if is_service_enabled fuxi; then
         done
         echo ""
         sudo chown "$STACK_USER":docker "$FUXI_DOCKER_ENGINE_SOCKET_FILE"
+        sudo usermod -aG docker $STACK_USER
 
         # In case iSCSI client is used
         sudo ln -s /lib/udev/scsi_id /usr/local/bin || true
