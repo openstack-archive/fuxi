@@ -37,9 +37,7 @@ function generate_testr_results {
     fi
 }
 
-owner=tempest
-# Configure the api tests to use the tempest.conf set by devstack.
-sudo_env="TEMPEST_CONFIG_DIR=$TEMPEST_DIR/etc"
+owner=stack
 
 
 # Set owner permissions according to job's requirements.
@@ -49,7 +47,7 @@ sudo chown -R $owner:stack $FUXI_DIR
 # Run tests
 echo "Running Fuxi $venv fullstack tests"
 set +e
-sudo -H -u $owner $sudo_env tox -e $venv
+sudo -H -u $owner tox -e $venv
 testr_exit_code=$?
 set -e
 
