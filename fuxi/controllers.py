@@ -93,7 +93,7 @@ def volumedriver_create():
 
     volume_provider_type = volume_opts.get('volume_provider', None)
     if not volume_provider_type:
-        volume_provider_type = app.volume_providers.keys()[0]
+        volume_provider_type = list(app.volume_providers.keys())[0]
 
     if volume_provider_type not in app.volume_providers:
         msg_fmt = _("Could not find a handler for %(volume_provider_type)s "
