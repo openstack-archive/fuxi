@@ -393,7 +393,7 @@ class Cinder(provider.Provider):
             msg = _LE("Volume %(vol_name)s %(c_vol)s "
                       "state %(state) is invalid")
             LOG.error(msg, {'vol_name': docker_volume_name,
-                            'c-vol': cinder_volume,
+                            'c_vol': cinder_volume,
                             'state': state})
             raise exceptions.NotMatchedState()
 
@@ -472,7 +472,7 @@ class Cinder(provider.Provider):
             msg = _("Volume %(vol_name)s %(c_vol)s is not in correct state, "
                     "current state is %(state)s")
             LOG.error(msg, {'vol_name': docker_volume_name,
-                            'c-vol': cinder_volume,
+                            'c_vol': cinder_volume,
                             'state': state})
             raise exceptions.NotMatchedState()
 
