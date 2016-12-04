@@ -1,0 +1,10 @@
+Code-Review+1: Liping Mao <limao@cisco.com>
+Code-Review+2: Antoni Segura Puimedon <celebdor@gmail.com>
+Code-Review+1: Hongbin Lu <hongbin.lu@huawei.com>
+Workflow+1: Antoni Segura Puimedon <celebdor@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Sun, 04 Dec 2016 22:33:13 +0000
+Reviewed-on: https://review.openstack.org/388299
+Project: openstack/fuxi
+Branch: refs/heads/master
