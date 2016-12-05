@@ -405,7 +405,7 @@ class Cinder(provider.Provider):
             search_opts = {'metadata': {consts.VOLUME_FROM: CONF.volume_from}}
             for vol in self.cinderclient.volumes.list(search_opts=search_opts):
                 docker_volume_name = vol.name
-                if not docker_volume_name or not vol.attachments:
+                if not docker_volume_name:
                     continue
 
                 mountpoint = self._get_mountpoint(vol.name)
