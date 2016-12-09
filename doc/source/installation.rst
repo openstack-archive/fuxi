@@ -59,7 +59,7 @@ After installing Fuxi, there will generate a configuration file `/etc/fuxi/fuxi.
     auth_url = AUTH_URL
     admin_user = ADMIN_USER
     admin_password = ADMIN_PASSWORD
-    admin_tenant_name = ADMIM_TENANT_NAME
+    admin_project_name = ADMIM_PROJECT_NAME
 
 * Cinder section
 
