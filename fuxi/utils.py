@@ -16,13 +16,15 @@ import requests
 import socket
 import traceback
 
+from fuxi.common import config as fxconf
 from fuxi.common import constants
 from fuxi import exceptions
 from fuxi.i18n import _LW, _LE
 
 from cinderclient import client as cinder_client
 from cinderclient import exceptions as cinder_exception
-from keystoneauth1.session import Session
+from keystoneauth1 import exceptions as ka_exception
+from keystoneauth1 import loading as ka_loading
 from keystoneclient.auth import get_plugin_class
 from novaclient import client as nova_client
 from novaclient import exceptions as nova_exception
@@ -34,11 +36,11 @@ from oslo_utils import importutils
 from oslo_utils import uuidutils
 from werkzeug import exceptions as w_exceptions
 
-cloud_init_conf = '/var/lib/cloud/instances'
 
 CONF = cfg.CONF
-
 LOG = logging.getLogger(__name__)
+
+cloud_init_conf = '/var/lib/cloud/instances'
 
 
 def get_hostname():
@@ -138,6 +140,14 @@ def _openstack_auth_from_config(**config):
     return plugin_class(**plugin_kwargs)
 
 
+def _openstack_auth(**config):
+    try:
+        return ka_loading.load_auth_from_conf_options(CONF,
+                                                      fxconf.CFG_GROUP)
+    except ka_exception.MissingRequiredOptions:
+        return _openstack_auth_from_config(**config)
+
+
 def get_keystone_session(**kwargs):
     keystone_conf = CONF.keystone
     config = {}
@@ -148,12 +158,15 @@ def get_keystone_session(**kwargs):
     config['token'] = keystone_conf.admin_token
     config.update(kwargs)
 
+    verify = None
     if keystone_conf.auth_insecure:
         verify = False
     else:
         verify = keystone_conf.auth_ca_cert
 
-    return Session(auth=_openstack_auth_from_config(**config), verify=verify)
+    ka_loading.load_session_from_conf_options(
+        CONF, fxconf.CFG_GROUP, auth=_openstack_auth(**config),
+        verify=verify)
 
 
 def get_cinderclient(session=None, region=None, **kwargs):
