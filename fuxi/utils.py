@@ -146,7 +146,7 @@ def get_keystone_session(**kwargs):
     config['auth_url'] = keystone_conf.auth_url
     config['username'] = keystone_conf.admin_user
     config['password'] = keystone_conf.admin_password
-    config['project_name'] = keystone_conf.admin_project_name
+    config['tenant_name'] = keystone_conf.admin_tenant_name
     config['token'] = keystone_conf.admin_token
     config.update(kwargs)
 
