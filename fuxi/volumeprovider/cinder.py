@@ -256,14 +256,14 @@ class Cinder(provider.Provider):
 
         device_info = {}
         if state == ATTACH_TO_THIS:
-            LOG.warn(_LW("The volume {0} {1} already exists and attached to "
-                         "this server").format(docker_volume_name,
-                                               cinder_volume))
+            LOG.warning(_LW("The volume {0} {1} already exists and attached "
+                            "to this server").format(docker_volume_name,
+                                                     cinder_volume))
             device_info = {'path': connector.get_device_path(cinder_volume)}
         elif state == NOT_ATTACH:
-            LOG.warn(_LW("The volume {0} {1} is already exists but not "
-                         "attached").format(docker_volume_name,
-                                            cinder_volume))
+            LOG.warning(_LW("The volume {0} {1} is already exists but not "
+                            "attached").format(docker_volume_name,
+                                               cinder_volume))
             device_info = connector.connect_volume(cinder_volume)
         elif state == ATTACH_TO_OTHER:
             if cinder_volume.multiattach:
@@ -313,7 +313,7 @@ class Cinder(provider.Provider):
 
         start_time = time.time()
         # Wait until the volume is not there or until the operation timeout
-        while(time.time() - start_time < consts.DESTROY_VOLUME_TIMEOUT):
+        while (time.time() - start_time < consts.DESTROY_VOLUME_TIMEOUT):
             try:
                 self.cinderclient.volumes.get(volume.id)
             except cinder_exception.NotFound:
@@ -377,7 +377,7 @@ class Cinder(provider.Provider):
                 msg = _LW("No other servers still use this volume {0} "
                           "{1} any more, so delete it from Cinder"
                           "").format(docker_volume_name, cinder_volume)
-                LOG.warn(msg)
+                LOG.warning(msg)
                 self._delete_volume(available_volume)
             return True
         elif state == NOT_ATTACH:
@@ -385,7 +385,7 @@ class Cinder(provider.Provider):
             return True
         elif state == ATTACH_TO_OTHER:
             msg = _LW("Volume %s is still in use, could not delete it")
-            LOG.warn(msg, cinder_volume)
+            LOG.warning(msg, cinder_volume)
             return True
         elif state == UNKNOWN:
             return False
@@ -445,7 +445,7 @@ class Cinder(provider.Provider):
         elif state == UNKNOWN:
             msg = _LW("Can't find this volume '{0}' in "
                       "Cinder").format(docker_volume_name)
-            LOG.warn(msg)
+            LOG.warning(msg)
             raise exceptions.NotFound(msg)
         else:
             msg = _LE("Volume '{0}' exists, but not attached to this volume,"
@@ -478,8 +478,8 @@ class Cinder(provider.Provider):
 
         link_path = connector.get_device_path(cinder_volume)
         if not os.path.exists(link_path):
-            LOG.warn(_LW("Could not find device link file, "
-                         "so rebuild it"))
+            LOG.warning(_LW("Could not find device link file, "
+                            "so rebuild it"))
             connector.disconnect_volume(cinder_volume)
             connector.connect_volume(cinder_volume)
 

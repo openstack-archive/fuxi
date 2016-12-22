@@ -115,7 +115,7 @@ class CinderConnector(fuxi_connector.Connector):
         except processutils.ProcessExecutionError as e:
             msg = _LE("Error happened when remove docker volume "
                       "mountpoint directory. Error: {0}").format(e)
-            LOG.warn(msg)
+            LOG.warning(msg)
 
         conn_info = self._get_connection_info(volume.id)
 

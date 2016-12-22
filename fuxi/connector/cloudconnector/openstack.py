@@ -125,7 +125,7 @@ class CinderConnector(connector.Connector):
         except processutils.ProcessExecutionError as e:
             msg = _LE("Error happened when remove docker volume "
                       "mountpoint directory. Error: {0}").format(e)
-            LOG.warn(msg)
+            LOG.warning(msg)
 
         try:
             self.novaclient.volumes.delete_server_volume(
