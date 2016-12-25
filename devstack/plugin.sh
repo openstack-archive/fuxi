@@ -48,16 +48,13 @@ function create_fuxi_account {
 function configure_fuxi {
     sudo install -d -o $STACK_USER $FUXI_CONFIG_DIR
 
-    (cd $FUXI_HOME && tox -egenconfig)
+    (cd $FUXI_HOME && exec ./tools/generate_config_file_samples.sh)
 
     cp $FUXI_HOME/etc/fuxi.conf.sample $FUXI_CONFIG
 
     if is_service_enabled fuxi; then
         configure_auth_token_middleware $FUXI_CONFIG fuxi \
-            $FUXI_AUTH_CACHE_DIR keystone
-        iniset $FUXI_CONFIG keystone admin_user fuxi
-        iniset $FUXI_CONFIG keystone admin_password $SERVICE_PASSWORD
-        iniset $FUXI_CONFIG keystone admin_tenant_name $SERVICE_PROJECT_NAME
+            $FUXI_AUTH_CACHE_DIR cinder
 
         iniset $FUXI_CONFIG DEFAULT fuxi_port 7879
         iniset $FUXI_CONFIG DEFAULT my_ip $HOST_IP
@@ -79,6 +76,10 @@ function configure_fuxi {
 if is_service_enabled fuxi; then
 
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
+        if use_library_from_git "kuryr"; then
+            git_clone_by_name "kuryr"
+            setup_dev_lib "kuryr"
+        fi
         install_etcd_data_store
         setup_develop $FUXI_HOME
 
