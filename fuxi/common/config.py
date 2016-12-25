@@ -12,6 +12,8 @@
 
 import os
 
+from kuryr.lib import config as kuryr_config
+from kuryr.lib import opts as kuryr_opts
 from oslo_config import cfg
 from oslo_log import log as logging
 
@@ -45,31 +47,38 @@ default_opts = [
                default='/etc/fuxi/rootwrap.conf'),
 ]
 
-keystone_opts = [
+legacy_keystone_opts = [
     cfg.StrOpt('region',
                default=os.environ.get('REGION'),
-               help=_('The region that this machine belongs to.')),
+               help=_('The region that this machine belongs to.'),
+               deprecated_for_removal=True),
     cfg.StrOpt('auth_url',
                default=os.environ.get('IDENTITY_URL'),
-               help=_('The URL for accessing the identity service.')),
+               help=_('The URL for accessing the identity service.'),
+               deprecated_for_removal=True),
     cfg.StrOpt('admin_user',
                default=os.environ.get('SERVICE_USER'),
                help=_('The username to auth with the identity service.')),
     cfg.StrOpt('admin_tenant_name',
                default=os.environ.get('SERVICE_TENANT_NAME'),
-               help=_('The tenant name to auth with the identity service.')),
+               help=_('The tenant name to auth with the identity service.'),
+               deprecated_for_removal=True),
     cfg.StrOpt('admin_password',
                default=os.environ.get('SERVICE_PASSWORD'),
-               help=_('The password to auth with the identity service.')),
+               help=_('The password to auth with the identity service.'),
+               deprecated_for_removal=True),
     cfg.StrOpt('admin_token',
                default=os.environ.get('SERVICE_TOKEN'),
-               help=_('The admin token.')),
+               help=_('The admin token.'),
+               deprecated_for_removal=True),
     cfg.StrOpt('auth_ca_cert',
                default=os.environ.get('SERVICE_CA_CERT'),
-               help=_('The CA certification file.')),
+               help=_('The CA certification file.'),
+               deprecated_for_removal=True),
     cfg.BoolOpt('auth_insecure',
                 default=True,
-                help=_("Turn off verification of the certificate for ssl.")),
+                help=_("Turn off verification of the certificate for ssl."),
+                deprecated_for_removal=True),
 ]
 
 cinder_opts = [
@@ -96,8 +105,16 @@ cinder_opts = [
 
 CONF = cfg.CONF
 CONF.register_opts(default_opts)
-CONF.register_opts(keystone_opts, group='keystone')
+CONF.register_opts(legacy_keystone_opts, group='keystone')
 CONF.register_opts(cinder_opts, group='cinder')
+
+CFG_GROUP = 'cinder'
+
+# Settting options for Keystone.
+kuryr_config.register_keystoneauth_opts(CONF, CFG_GROUP)
+CONF.set_default('auth_type', default='password', group=CFG_GROUP)
+
+keystone_auth_opts = kuryr_opts.get_keystoneauth_conf_options()
 
 # Setting oslo.log options for logging.
 logging.register_options(CONF)
