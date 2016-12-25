@@ -24,8 +24,10 @@ from fuxi.i18n import _LW, _LE
 
 from cinderclient import client as cinder_client
 from cinderclient import exceptions as cinder_exception
+from keystoneauth1 import exceptions as ka_exception
 from keystoneauth1.session import Session
 from keystoneclient.auth import get_plugin_class
+from kuryr.lib import utils as lib_utils
 from novaclient import client as nova_client
 from novaclient import exceptions as nova_exception
 from os_brick import exception as brick_exception
@@ -140,7 +142,7 @@ def _openstack_auth_from_config(**config):
     return plugin_class(**plugin_kwargs)
 
 
-def get_keystone_session(**kwargs):
+def get_legacy_keystone_session(**kwargs):
     keystone_conf = CONF.keystone
     config = {}
     config['auth_url'] = keystone_conf.auth_url
@@ -156,6 +158,15 @@ def get_keystone_session(**kwargs):
         verify = keystone_conf.auth_ca_cert
 
     return Session(auth=_openstack_auth_from_config(**config), verify=verify)
+
+
+def get_keystone_session(**kwargs):
+    try:
+		auth_plugin = lib_utils.get_auth_plugin('cinder', *args, **kwargs)
+		session = lib_utils.get_keystone_session('cinder', auth_plugin, *args, **kwargs)
+        return session
+    except ka_exception.MissingRequiredOptions:
+        return get_legacy_keystone_session(**kwargs)
 
 
 def get_cinderclient(session=None, region=None, **kwargs):

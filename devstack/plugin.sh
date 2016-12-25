@@ -79,6 +79,10 @@ function configure_fuxi {
 if is_service_enabled fuxi; then
 
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
+        if use_library_from_git "kuryr"; then
+            git_clone_by_name "kuryr"
+            setup_dev_lib "kuryr"
+        fi
         install_etcd_data_store
         setup_develop $FUXI_HOME
 
