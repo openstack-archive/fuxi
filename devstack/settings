@@ -17,4 +17,8 @@ FUXI_DOCKER_ENGINE_PORT=${FUXI_DOCKER_ENGINE_PORT:-2375}
 FUXI_DOCKER_ENGINE_SOCKET_FILE=${FUXI_DOCKER_ENGINE_SOCKET_FILE:-/var/run/docker.sock}
 FUXI_ETCD_PORT=${FUXI_ETCD_PORT:-4001}
 
+GITREPO["kuryr"]=${KURYR_REPO:-${GIT_BASE}/openstack/kuryr.git}
+GITBRANCH["kuryr"]=${KURYR_BRANCH:-master}
+GITDIR["kuryr"]=$DEST/kuryr
+
 enable_service fuxi etcd-server docker-engine

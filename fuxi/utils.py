@@ -18,14 +18,12 @@ import socket
 import string
 import traceback
 
-from fuxi.common import constants
-from fuxi import exceptions
-from fuxi.i18n import _LW, _LE
-
 from cinderclient import client as cinder_client
 from cinderclient import exceptions as cinder_exception
+from keystoneauth1 import exceptions as ka_exception
 from keystoneauth1.session import Session
 from keystoneclient.auth import get_plugin_class
+from kuryr.lib import utils as kuryr_utils
 from novaclient import client as nova_client
 from novaclient import exceptions as nova_exception
 from os_brick import exception as brick_exception
@@ -35,6 +33,11 @@ from oslo_log import log as logging
 from oslo_utils import importutils
 from oslo_utils import uuidutils
 from werkzeug import exceptions as w_exceptions
+
+from fuxi.common import config
+from fuxi.common import constants
+from fuxi import exceptions
+from fuxi.i18n import _LW, _LE
 
 cloud_init_conf = '/var/lib/cloud/instances'
 
@@ -140,7 +143,7 @@ def _openstack_auth_from_config(**config):
     return plugin_class(**plugin_kwargs)
 
 
-def get_keystone_session(**kwargs):
+def get_legacy_keystone_session(**kwargs):
     keystone_conf = CONF.keystone
     config = {}
     config['auth_url'] = keystone_conf.auth_url
@@ -156,6 +159,16 @@ def get_keystone_session(**kwargs):
         verify = keystone_conf.auth_ca_cert
 
     return Session(auth=_openstack_auth_from_config(**config), verify=verify)
+
+
+def get_keystone_session(**kwargs):
+    try:
+        conf_group = config.CFG_GROUP
+        auth_plugin = kuryr_utils.get_auth_plugin(conf_group)
+        session = kuryr_utils.get_keystone_session(conf_group, auth_plugin)
+        return session
+    except ka_exception.MissingRequiredOptions:
+        return get_legacy_keystone_session(**kwargs)
 
 
 def get_cinderclient(session=None, region=None, **kwargs):
