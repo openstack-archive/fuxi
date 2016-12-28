@@ -42,7 +42,9 @@ default_opts = [
                 default=True,
                 help=_('Make this volume plugin run in multi-thread.')),
     cfg.StrOpt('rootwrap_config',
-               default='/etc/fuxi/rootwrap.conf'),
+               default='/etc/fuxi/rootwrap.conf',
+               help=_('Path to the rootwrap configuration file to use for '
+                      'running commands as root.')),
 ]
 
 keystone_opts = [
