@@ -163,7 +163,7 @@ def get_legacy_keystone_session(**kwargs):
 
 def get_keystone_session(**kwargs):
     try:
-        conf_group = config.CFG_GROUP
+        conf_group = config.cinder_group.name
         auth_plugin = kuryr_utils.get_auth_plugin(conf_group)
         session = kuryr_utils.get_keystone_session(conf_group, auth_plugin)
         return session
