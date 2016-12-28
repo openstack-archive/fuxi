@@ -170,13 +170,11 @@ def get_keystone_session(conf_group, **kwargs):
         return get_legacy_keystone_session(**kwargs), None
 
 
-def get_cinderclient(session=None, region=None, **kwargs):
-    if not session:
-        session, auth_plugin = get_keystone_session(config.CFG_GROUP, **kwargs)
-    if not region:
-        region = CONF.keystone['region']
+def get_cinderclient(*args, **kwargs):
+    session, auth_plugin = get_keystone_session(config.cinder_group.name)
     return cinder_client.Client(session=session,
-                                region_name=region,
+                                auth=auth_plugin,
+                                region_name=CONF.cinder.region_name,
                                 version=2)
 
 

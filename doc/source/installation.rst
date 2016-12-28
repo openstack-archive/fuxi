@@ -65,6 +65,7 @@ After installing Fuxi, there will generate a configuration file `/etc/fuxi/fuxi.
 
 ::
 
+    region_name = REGION_NAME  # Region name of this node. This is used when picking the URL in the service catalog.
     volume_connector = VOLUME_CONNECTOR # The way to connect to volume. For Cinder, this could chose from `[openstack, osbrick]`
     fstype = ext4 # Default filesystem type to format, if not provided from request
 
