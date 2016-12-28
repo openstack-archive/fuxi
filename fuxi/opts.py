@@ -20,6 +20,8 @@ from fuxi.common import config
 
 
 def list_fuxi_opts():
-    return [('DEFAULT', itertools.chain(config.default_opts,)),
-            ('keystone', itertools.chain(config.keystone_opts,)),
-            ('cinder', itertools.chain(config.cinder_opts,)), ]
+    return [
+        ('DEFAULT', itertools.chain(config.default_opts,)),
+        (config.keystone_group.name, itertools.chain(config.keystone_opts,)),
+        (config.cinder_group.name, itertools.chain(config.cinder_opts,)),
+    ]

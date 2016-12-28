@@ -45,6 +45,11 @@ default_opts = [
                default='/etc/fuxi/rootwrap.conf'),
 ]
 
+keystone_group = cfg.OptGroup(
+    'keystone',
+    title='Keystone Options',
+    help=_('Configuration options for OpenStack Keystone'))
+
 keystone_opts = [
     cfg.StrOpt('region',
                default=os.environ.get('REGION'),
@@ -72,6 +77,11 @@ keystone_opts = [
                 help=_("Turn off verification of the certificate for ssl.")),
 ]
 
+cinder_group = cfg.OptGroup(
+    'cinder',
+    title='Cinder Options',
+    help=_('Configuration options for OpenStack Cinder'))
+
 cinder_opts = [
     cfg.StrOpt('volume_connector',
                default='osbrick',
@@ -96,8 +106,10 @@ cinder_opts = [
 
 CONF = cfg.CONF
 CONF.register_opts(default_opts)
-CONF.register_opts(keystone_opts, group='keystone')
-CONF.register_opts(cinder_opts, group='cinder')
+CONF.register_group(keystone_group)
+CONF.register_opts(keystone_opts, group=keystone_group)
+CONF.register_group(cinder_group)
+CONF.register_opts(cinder_opts, group=cinder_group)
 
 # Setting oslo.log options for logging.
 logging.register_options(CONF)
