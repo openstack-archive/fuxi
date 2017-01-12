@@ -161,19 +161,18 @@ def get_legacy_keystone_session(**kwargs):
     return Session(auth=_openstack_auth_from_config(**config), verify=verify)
 
 
-def get_keystone_session(**kwargs):
+def get_keystone_session(conf_group, **kwargs):
     try:
-        conf_group = config.CFG_GROUP
         auth_plugin = kuryr_utils.get_auth_plugin(conf_group)
         session = kuryr_utils.get_keystone_session(conf_group, auth_plugin)
-        return session
+        return session, auth_plugin
     except ka_exception.MissingRequiredOptions:
-        return get_legacy_keystone_session(**kwargs)
+        return get_legacy_keystone_session(**kwargs), None
 
 
 def get_cinderclient(session=None, region=None, **kwargs):
     if not session:
-        session = get_keystone_session(**kwargs)
+        session, auth_plugin = get_keystone_session(config.CFG_GROUP, **kwargs)
     if not region:
         region = CONF.keystone['region']
     return cinder_client.Client(session=session,
@@ -181,13 +180,10 @@ def get_cinderclient(session=None, region=None, **kwargs):
                                 version=2)
 
 
-def get_novaclient(session=None, region=None, **kwargs):
-    if not session:
-        session = get_keystone_session(**kwargs)
-    if not region:
-        region = CONF.keystone['region']
+def get_novaclient(*args, **kwargs):
+    session, auth_plugin = get_keystone_session(config.nova_group.name)
     return nova_client.Client(session=session,
-                              region_name=region,
+                              auth=auth_plugin,
                               version=2)
 
 

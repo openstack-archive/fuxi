@@ -103,6 +103,11 @@ cinder_opts = [
                        'one instance.'))
 ]
 
+nova_group = cfg.OptGroup(
+    'nova',
+    title='Nova Options',
+    help=_('Configuration options for OpenStack Nova'))
+
 
 CONF = cfg.CONF
 CONF.register_opts(default_opts)
@@ -114,6 +119,8 @@ CFG_GROUP = 'cinder'
 # Settting options for Keystone.
 kuryr_config.register_keystoneauth_opts(CONF, CFG_GROUP)
 CONF.set_default('auth_type', default='password', group=CFG_GROUP)
+
+kuryr_config.register_keystoneauth_opts(CONF, nova_group.name)
 
 keystone_auth_opts = kuryr_opts.get_keystoneauth_conf_options()
 
