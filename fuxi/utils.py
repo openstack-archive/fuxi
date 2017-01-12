@@ -181,13 +181,12 @@ def get_cinderclient(session=None, region=None, **kwargs):
                                 version=2)
 
 
-def get_novaclient(session=None, region=None, **kwargs):
-    if not session:
-        session = get_keystone_session(**kwargs)
-    if not region:
-        region = CONF.keystone['region']
+def get_novaclient(*args, **kwargs):
+    conf_group = config.nova_group.name
+    auth_pugin = kuryr_utils.get_auth_plugin(conf_group)
+    session = kuryr_utils.get_keystone_session(conf_group, auth_pugin)
     return nova_client.Client(session=session,
-                              region_name=region,
+                              auth=auth_pugin,
                               version=2)
 
 
