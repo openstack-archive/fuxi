@@ -145,6 +145,13 @@ if is_service_enabled fuxi; then
         # In case iSCSI client is used
         sudo ln -s /lib/udev/scsi_id /usr/local/bin || true
 
+        #if [[ "$DEVSTACK_GATE_USE_PYTHON3" = "True" ]]; then
+        #    # Switch off glance->swift communication as swift fails under py3.x
+        #    iniset /etc/glance/glance-api.conf glance_store default_store file
+        #fi
+        echo USE_PYTHON3: $USE_PYTHON3
+        iniset /etc/glance/glance-api.conf glance_store default_store file
+
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         run_process fuxi "sudo fuxi-server --config-file $FUXI_CONFIG"
 
