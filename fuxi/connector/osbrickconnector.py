@@ -94,7 +94,7 @@ class CinderConnector(fuxi_connector.Connector):
         conn_info = self._get_connection_info(volume.id)
 
         protocol = conn_info['driver_volume_type']
-        brick_connector = brick_get_connector(protocol)
+        brick_connector = brick_get_connector(protocol, do_local_attach=True)
         device_info = brick_connector.connect_volume(conn_info['data'])
         LOG.info(_LI("Get device_info after connect to "
                      "volume %s") % device_info)
