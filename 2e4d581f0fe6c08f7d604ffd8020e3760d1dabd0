@@ -1,0 +1,10 @@
+Code-Review+1: Hongbin Lu <hongbin.lu@huawei.com>
+Code-Review+2: Antoni Segura Puimedon <celebdor@gmail.com>
+Code-Review+2: Berezovsky Irena <irenab.dev@gmail.com>
+Workflow+1: Antoni Segura Puimedon <celebdor@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 13 Jan 2017 14:52:31 +0000
+Reviewed-on: https://review.openstack.org/419224
+Project: openstack/fuxi
+Branch: refs/heads/master
