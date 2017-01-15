@@ -114,7 +114,10 @@ cinder_opts = [
     cfg.BoolOpt('multiattach',
                 default=False,
                 help=_('Allow the volume to be attached to more than '
-                       'one instance.'))
+                       'one instance.')),
+    cfg.BoolOpt('search_in_all_tenants',
+                default=False,
+                help=_('Allow to search Cinder volumes in all tenants.')),
 ]
 
 nova_group = cfg.OptGroup(
