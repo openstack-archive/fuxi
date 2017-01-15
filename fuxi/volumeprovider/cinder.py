@@ -134,7 +134,8 @@ class Cinder(provider.Provider):
 
             volume_connector = cinder_conf.volume_connector
             search_opts = {'name': docker_volume_name,
-                           'metadata': {consts.VOLUME_FROM: CONF.volume_from}}
+                           'metadata': {consts.VOLUME_FROM: CONF.volume_from},
+                           'all_tenants': 1}
             for vol in self.cinderclient.volumes.list(search_opts=search_opts):
                 if vol.name == docker_volume_name:
                     if vol.attachments:
@@ -402,7 +403,8 @@ class Cinder(provider.Provider):
 
         docker_volumes = []
         try:
-            search_opts = {'metadata': {consts.VOLUME_FROM: CONF.volume_from}}
+            search_opts = {'metadata': {consts.VOLUME_FROM: CONF.volume_from},
+                           'all_tenants': 1}
             for vol in self.cinderclient.volumes.list(search_opts=search_opts):
                 docker_volume_name = vol.name
                 if not docker_volume_name:
