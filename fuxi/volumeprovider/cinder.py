@@ -126,8 +126,10 @@ class Cinder(provider.Provider):
 
     def _get_docker_volume(self, docker_volume_name):
         try:
-            search_opts = {'name': docker_volume_name,
-                           'metadata': {consts.VOLUME_FROM: CONF.volume_from}}
+            search_opts = {
+                'name': docker_volume_name,
+                'metadata': {consts.VOLUME_FROM: CONF.volume_from},
+                'all_tenants': 1 if cinder_conf.search_in_all_tenants else 0}
             vols = self.cinderclient.volumes.list(search_opts=search_opts)
         except cinder_exception.ClientException as ex:
             LOG.error(_LE("Error happened while getting volume list "
@@ -407,7 +409,9 @@ class Cinder(provider.Provider):
 
         docker_volumes = []
         try:
-            search_opts = {'metadata': {consts.VOLUME_FROM: CONF.volume_from}}
+            search_opts = {
+                'metadata': {consts.VOLUME_FROM: CONF.volume_from},
+                'all_tenants': 1 if cinder_conf.search_in_all_tenants else 0}
             for vol in self.cinderclient.volumes.list(search_opts=search_opts):
                 docker_volume_name = vol.name
                 if not docker_volume_name:
