@@ -73,9 +73,8 @@ def get_cinder_volume_kwargs(docker_volume_name, docker_volume_opt):
             raise exceptions.InvalidInput(msg)
     else:
         size = CONF.default_volume_size
-        msg = _LI("Volume size doesn't provide from command, so use "
-                  "default size {0}G").format(size)
-        LOG.info(msg)
+        LOG.info(_LI("Volume size doesn't provide from command, so use"
+                     " default size %sG"), size)
     kwargs['size'] = size
 
     for key, value in docker_volume_opt.items():
@@ -169,8 +168,8 @@ class Cinder(provider.Provider):
         return False
 
     def _create_volume(self, docker_volume_name, volume_opts):
-        LOG.info(_LI("Start to create docker volume {0} from "
-                     "Cinder").format(docker_volume_name))
+        LOG.info(_LI("Start to create docker volume %s from Cinder"),
+                 docker_volume_name)
 
         cinder_volume_kwargs = get_cinder_volume_kwargs(docker_volume_name,
                                                         volume_opts)
@@ -178,12 +177,12 @@ class Cinder(provider.Provider):
         try:
             volume = self.cinderclient.volumes.create(**cinder_volume_kwargs)
         except cinder_exception.ClientException as e:
-            msg = _LE("Error happened when create an volume {0} from Cinder. "
-                      "Error: {1}").format(docker_volume_name, e)
-            LOG.error(msg)
+            LOG.error(_LE("Error happened when create an volume %(vol)s from"
+                          " Cinder. Error: %(err)s"),
+                      {'vol': docker_volume_name, 'err': e})
             raise
 
-        LOG.info(_LI("Waiting volume {0} to be available").format(volume))
+        LOG.info(_LI("Waiting volume %s to be available"), volume)
         volume_monitor = state_monitor.StateMonitor(
             self.cinderclient,
             volume,
@@ -192,8 +191,9 @@ class Cinder(provider.Provider):
             time_delay=consts.VOLUME_SCAN_TIME_DELAY)
         volume = volume_monitor.monitor_cinder_volume()
 
-        LOG.info(_LI("Create docker volume {0} {1} from Cinder "
-                     "successfully").format(docker_volume_name, volume))
+        LOG.info(_LI("Create docker volume %(d_v)s %(vols) from Cinder "
+                     "successfully"),
+                 {'d_v': docker_volume_name, 'vol': volume})
         return volume
 
     def _create_from_existing_volume(self, docker_volume_name,
@@ -309,9 +309,8 @@ class Cinder(provider.Provider):
         except cinder_exception.NotFound:
             return
         except cinder_exception.ClientException as e:
-            msg = _LE("Error happened when delete volume from Cinder. "
-                      "Error: {0}").format(e)
-            LOG.error(msg)
+            LOG.error(_LE("Error happened when delete volume from Cinder."
+                          " Error: %s"), e)
             raise
 
         start_time = time.time()
@@ -334,8 +333,9 @@ class Cinder(provider.Provider):
 
     def delete(self, docker_volume_name):
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume {0} {1} with state "
-                     "{2}").format(docker_volume_name, cinder_volume, state))
+        LOG.info(_LI("Get docker volume %(d_v)s %(vol)s with state %(st)s"),
+                 {'d_v': docker_volume_name, 'vol':  cinder_volume,
+                  'st': state})
 
         if state == ATTACH_TO_THIS:
             link_path = self._get_connector().get_device_path(cinder_volume)
@@ -377,10 +377,10 @@ class Cinder(provider.Provider):
             # If this volume is not used by other server any more,
             # than delete it from Cinder.
             if not available_volume.attachments:
-                msg = _LW("No other servers still use this volume {0} "
-                          "{1} any more, so delete it from Cinder"
-                          "").format(docker_volume_name, cinder_volume)
-                LOG.warning(msg)
+                LOG.warning(
+                    _LW("No other servers still use this volume %(d_v)s"
+                        " %(vol)s any more, so delete it from Cinder"),
+                    {'d_v': docker_volume_name, 'vol': cinder_volume})
                 self._delete_volume(available_volume)
             return True
         elif state == NOT_ATTACH:
@@ -420,25 +420,28 @@ class Cinder(provider.Provider):
                               'Mountpoint': mountpoint}
                 docker_volumes.append(docker_vol)
         except cinder_exception.ClientException as e:
-            LOG.error(_LE("Retrieve volume list failed. Error: {0}").format(e))
+            LOG.error(_LE("Retrieve volume list failed. Error: %s"), e)
             raise
 
-        LOG.info(_LI("Retrieve docker volumes {0} from Cinder "
-                     "successfully").format(docker_volumes))
+        LOG.info(_LI("Retrieve docker volumes %s from Cinder "
+                     "successfully"), docker_volumes)
         return docker_volumes
 
     def show(self, docker_volume_name):
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume {0} {1} with state "
-                     "{2}").format(docker_volume_name, cinder_volume, state))
+        LOG.info(_LI("Get docker volume %s(d_v)s %(vol)s with state %(st)s"),
+                 {'d_v': docker_volume_name, 'vol': cinder_volume,
+                  'st': state})
 
         if state == ATTACH_TO_THIS:
             devpath = os.path.realpath(
                 self._get_connector().get_device_path(cinder_volume))
             mp = self._get_mountpoint(docker_volume_name)
-            LOG.info("Expected devpath: {0} and mountpoint: {1} for volume: "
-                     "{2} {3}".format(devpath, mp, docker_volume_name,
-                                      cinder_volume))
+            LOG.info(
+                _LI("Expected devpath: %(dp)s and mountpoint: %(mp)s for"
+                    " volume: %(d_v)s %(vol)s"),
+                {'dp': devpath, 'mp': mp,
+                 'd_v': docker_volume_name, 'vol': cinder_volume})
             mounter = mount.Mounter()
             return {"Name": docker_volume_name,
                     "Mountpoint": mp if mp in mounter.get_mps_by_device(
@@ -458,8 +461,9 @@ class Cinder(provider.Provider):
 
     def mount(self, docker_volume_name):
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume {0} {1} with state "
-                     "{2}").format(docker_volume_name, cinder_volume, state))
+        LOG.info(_LI("Get docker volume %s(d_v)s %(vol)s with state %(st)s"),
+                 {'d_v': docker_volume_name, 'vol': cinder_volume,
+                  'st': state})
 
         connector = self._get_connector()
         if state == NOT_ATTACH:
@@ -506,8 +510,8 @@ class Cinder(provider.Provider):
 
     def check_exist(self, docker_volume_name):
         _, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume {0} with state "
-                     "{1}").format(docker_volume_name, state))
+        LOG.info(_LI("Get docker volume %s(d_v)s with state %(st)s"),
+                 {'d_v': docker_volume_name, 'st': state})
 
         if state == UNKNOWN:
             return False
