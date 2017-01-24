@@ -374,7 +374,7 @@ class Cinder(provider.Provider):
             self._get_connector().disconnect_volume(cinder_volume)
 
             available_volume = self.cinderclient.volumes.get(cinder_volume.id)
-            # If this volume is not used by other server any more,
+            # If this volume is not used by other server anymore,
             # than delete it from Cinder.
             if not available_volume.attachments:
                 msg = _LW("No other servers still use this volume {0} "

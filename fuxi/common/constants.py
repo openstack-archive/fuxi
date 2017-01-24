@@ -20,7 +20,7 @@ ATTACH_TO_THIS = 'attach_to_this'
 ATTACH_TO_OTHER = 'attach_to_other'
 
 # If volume_provider is cinder, and if cinder volume is attached to this server
-# by Nova, an link file will create under this directory to match attached
+# by Nova, a link file will create under this directory to match attached
 # volume. Of course, creating link file will decrease interact time
 # with backend providers in some cases.
 VOLUME_LINK_DIR = '/dev/disk/by-id/'
