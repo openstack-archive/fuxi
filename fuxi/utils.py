@@ -73,7 +73,7 @@ def get_instance_uuid():
         metadata_api_versions = resp.text.split()
         metadata_api_versions.sort(reverse=True)
     except Exception as e:
-        LOG.error(_LE("Get metadata apis failed. Error: {}").format(e))
+        LOG.error(_LE("Get metadata apis failed. Error: %s"), e)
         raise exceptions.FuxiException("Metadata API Not Found")
 
     for api_version in metadata_api_versions:
@@ -87,8 +87,9 @@ def get_instance_uuid():
             if metadata.get('uuid', None):
                 return metadata['uuid']
         except Exception as e:
-            LOG.warning(_LW("Get instance_uuid from metadata server {0} "
-                            "failed. Error: {1}").format(metadata_url, e))
+            LOG.warning(_LW("Get instance_uuid from metadata server"
+                            " %(md_url)s failed. Error: %(err)s"),
+                        {'md_url': metadata_url, 'err': e})
             continue
 
     raise exceptions.FuxiException("Instance UUID Not Found")

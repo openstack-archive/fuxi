@@ -50,7 +50,7 @@ class CinderConnector(connector.Connector):
             if not server_id:
                 server_id = utils.get_instance_uuid()
 
-            LOG.info(_LI("Start to connect to volume {0}").format(volume))
+            LOG.info(_LI("Start to connect to volume %s"), volume)
             nova_volume = self.novaclient.volumes.create_server_volume(
                 server_id=server_id,
                 volume_id=volume.id,
@@ -63,9 +63,9 @@ class CinderConnector(connector.Connector):
                 ('available', 'attaching',))
             attached_volume = volume_monitor.monitor_cinder_volume()
         except nova_exception.ClientException as ex:
-            LOG.error(_LE("Attaching volume {0} to server {1} "
-                          "failed. Error: {2}").format(volume.id,
-                                                       server_id, ex))
+            LOG.error(_LE("Attaching volume %(vol)s to server %(s)s "
+                          "failed. Error: %(err)s"),
+                      {'vol': volume.id, 's': server_id, 'err': ex})
             raise
 
         # Get all devices on host after do volume-attach,
@@ -83,17 +83,15 @@ class CinderConnector(connector.Connector):
                 msg = _("Could not detect added device with "
                         "limited time")
                 raise exceptions.FuxiException(msg)
-        LOG.info(_LI("Get extra added block device {0}"
-                     "").format(delta_devices))
+        LOG.info(_LI("Get extra added block device %s"), delta_devices)
 
         for device in delta_devices:
             if bdm.get_device_size(device) == volume.size:
                 device = device.replace('/sys/block', '/dev')
-                msg = _LI("Find attached device {0} for volume {1} "
-                          "{2}").format(device,
-                                        attached_volume.name,
-                                        volume)
-                LOG.info(msg)
+                LOG.info(_LI("Find attached device %(dev)s"
+                             " for volume %(at)s %(vol)s"),
+                         {'dev': device, 'at': attached_volume.name,
+                          'vol': volume})
 
                 link_path = os.path.join(consts.VOLUME_LINK_DIR, volume.id)
                 try:
@@ -101,10 +99,9 @@ class CinderConnector(connector.Connector):
                                   link_path,
                                   run_as_root=True)
                 except processutils.ProcessExecutionError as e:
-                    msg = _LE("Error happened when create link file for "
-                              "block device attached by Nova. "
-                              "Error: {0}").format(e)
-                    LOG.error(msg)
+                    LOG.error(_LE("Error happened when create link file for"
+                                  " block device attached by Nova."
+                                  " Error: %s"), e)
                     raise
                 return {'path': link_path}
 
@@ -115,26 +112,23 @@ class CinderConnector(connector.Connector):
         try:
             volume = self.cinderclient.volumes.get(volume.id)
         except cinder_exception.ClientException as e:
-            msg = _LE("Get Volume {0} from Cinder failed").format(volume.id)
-            LOG.error(msg)
+            LOG.error(_LE("Get Volume %s from Cinder failed"), volume.id)
             raise
 
         try:
             link_path = self.get_device_path(volume)
             utils.execute('rm', '-f', link_path, run_as_root=True)
         except processutils.ProcessExecutionError as e:
-            msg = _LE("Error happened when remove docker volume "
-                      "mountpoint directory. Error: {0}").format(e)
-            LOG.warning(msg)
+            LOG.warning(_LE("Error happened when remove docker volume"
+                            " mountpoint directory. Error: %s"), e)
 
         try:
             self.novaclient.volumes.delete_server_volume(
                 utils.get_instance_uuid(),
                 volume.id)
         except nova_exception.ClientException as e:
-            msg = _LE("Detaching volume {0} failed. "
-                      "Err: {1}").format(volume.id, e)
-            LOG.error(msg)
+            LOG.error(_LE("Detaching volume %(vol)s failed. Err: %(err)s"),
+                      {'vol': volume.id, 'err': e})
             raise
 
         volume_monitor = state_monitor.StateMonitor(self.cinderclient,
