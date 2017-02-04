@@ -1,3 +1,7 @@
 fuxi.egg-info
 .tox
-.pyc
+.testrepository
+*.pyc
+
+# generated config file
+etc/fuxi.conf.sample

@@ -1,0 +1,16 @@
+[[local|localrc]]
+
+LOGFILE=stack.sh.log
+LOG_COLOR=False
+
+DATABASE_PASSWORD=pass
+RABBIT_PASSWORD=pass
+SERVICE_PASSWORD=pass
+SERVICE_TOKEN=pass
+ADMIN_PASSWORD=pass
+
+# Install kuryr git master source code by default.
+# If you want to use stable kuryr lib, please comment out this line.
+LIBS_FROM_GIT=kuryr
+
+enable_plugin fuxi https://git.openstack.org/openstack/fuxi

@@ -18,8 +18,9 @@ import tempfile
 from fuxi.common import config
 from fuxi.common import constants as consts
 from fuxi.common import mount
+from fuxi.common import state_monitor
 from fuxi import exceptions
-from fuxi.tests import base, fake_client, fake_object
+from fuxi.tests.unit import base, fake_client, fake_object
 from fuxi import utils
 from fuxi.volumeprovider import cinder
 
@@ -52,6 +53,7 @@ def mock_connector(cls):
 
 
 def mock_monitor_cinder_volume(cls):
+    cls.expected_obj.status = cls.desired_state
     return cls.expected_obj
 
 
@@ -73,6 +75,82 @@ class TestCinder(base.TestCase):
     def test_create_with_volume_not_exist(self, mock_docker_volume):
         self.assertEqual(os.path.join(volume_link_dir, DEFAULT_VOLUME_ID),
                          self.cinderprovider.create('fake-vol', {})['path'])
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(
+                           status='unknown'), consts.UNKNOWN))
+    @mock.patch.object(state_monitor.StateMonitor, 'monitor_cinder_volume',
+                       mock_monitor_cinder_volume)
+    def test_create_from_volume_id(self, mock_docker_volume):
+        fake_volume_name = 'fake_vol'
+        fake_volume_opts = {'volume_id': DEFAULT_VOLUME_ID}
+        result = self.cinderprovider.create(fake_volume_name,
+                                            fake_volume_opts)
+        self.assertEqual(os.path.join(consts.VOLUME_LINK_DIR,
+                                      DEFAULT_VOLUME_ID),
+                         result['path'])
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(
+                           status='unknown'), consts.UNKNOWN))
+    @mock.patch('fuxi.tests.unit.fake_client.FakeCinderClient.Volumes.get',
+                side_effect=cinder_exception.ClientException(404))
+    def test_create_from_volume_id_with_volume_not_exist(self,
+                                                         mocK_docker_volume,
+                                                         mock_volume_get):
+        fake_volume_name = 'fake_vol'
+        fake_volume_opts = {'volume_id': DEFAULT_VOLUME_ID}
+        self.assertRaises(cinder_exception.ClientException,
+                          self.cinderprovider.create,
+                          fake_volume_name,
+                          fake_volume_opts)
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(
+                           status='unknown'), consts.UNKNOWN))
+    def test_create_from_volume_id_with_unexpected_status_1(
+            self, mock_docker_volume):
+        fake_volume_name = 'fake_vol'
+        fake_volume_args = {'volume_id': DEFAULT_VOLUME_ID,
+                            'status': 'attaching'}
+        fake_cinder_volume = fake_object.FakeCinderVolume(**fake_volume_args)
+        self.cinderprovider._get_docker_volume = mock.MagicMock()
+        self.cinderprovider._get_docker_volume.return_value \
+            = (fake_cinder_volume,
+               consts.UNKNOWN)
+        self.cinderprovider.cinderclient.volumes.get = mock.MagicMock()
+        self.cinderprovider.cinderclient.volumes.get.return_value = \
+            fake_cinder_volume
+        self.assertRaises(exceptions.FuxiException,
+                          self.cinderprovider.create,
+                          fake_volume_name,
+                          {'volume_id': DEFAULT_VOLUME_ID})
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    def test_create_from_volume_id_with_unexpected_status_2(self):
+        fake_server_id = 'fake_server_123'
+        fake_host_name = 'attached_to_other'
+        fake_volume_name = 'fake_vol'
+        fake_volume_args = {'volume_id': DEFAULT_VOLUME_ID,
+                            'status': 'in-use',
+                            'multiattach': False,
+                            'attachments': [{'server_id': fake_server_id,
+                                             'host_name': fake_host_name}]}
+        fake_cinder_volume = fake_object.FakeCinderVolume(**fake_volume_args)
+        self.cinderprovider._get_docker_volume = mock.MagicMock()
+        self.cinderprovider._get_docker_volume.return_value \
+            = (fake_cinder_volume,
+               consts.UNKNOWN)
+        self.cinderprovider.cinderclient.volumes.get = mock.MagicMock()
+        self.cinderprovider.cinderclient.volumes.get.return_value = \
+            fake_cinder_volume
+        self.assertRaises(exceptions.FuxiException,
+                          self.cinderprovider.create,
+                          fake_volume_name,
+                          {'volume_id': DEFAULT_VOLUME_ID})
 
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
     def test_create_with_volume_attach_to_this(self):
@@ -126,6 +204,17 @@ class TestCinder(base.TestCase):
                           'fake-vol',
                           {})
 
+    def test_create_with_multi_matched_volumes(self):
+        fake_vol_name = 'fake-vol'
+        fake_vols = [fake_object.FakeCinderVolume(name=fake_vol_name),
+                     fake_object.FakeCinderVolume(name=fake_vol_name)]
+        with mock.patch.object(fake_client.FakeCinderClient.Volumes, 'list',
+                               return_value=fake_vols):
+            self.assertRaises(exceptions.TooManyResources,
+                              self.cinderprovider.create,
+                              fake_vol_name,
+                              {})
+
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
     @mock.patch.object(utils, 'execute')
     @mock.patch.object(FakeCinderConnector,
@@ -151,6 +240,21 @@ class TestCinder(base.TestCase):
 
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
     @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(),
+                                     consts.NOT_ATTACH))
+    def test_delete_not_attach(self, mock_docker_volume):
+        self.cinderprovider._delete_volume = mock.MagicMock()
+        self.assertTrue(self.cinderprovider.delete('fake-vol'))
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(),
+                                     consts.ATTACH_TO_OTHER))
+    def test_delete_attach_to_other(self, mock_docker_volume):
+        self.assertTrue(self.cinderprovider.delete('fake-vol'))
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
                        return_value=(fake_object.FakeCinderVolume(status=None),
                                      None))
     def test_delete_not_match_state(self, mock_docker_volume):
@@ -163,7 +267,7 @@ class TestCinder(base.TestCase):
     @mock.patch.object(FakeCinderConnector,
                        'get_device_path',
                        mock_device_path_for_delete)
-    @mock.patch('fuxi.tests.fake_client.FakeCinderClient.Volumes.delete',
+    @mock.patch('fuxi.tests.unit.fake_client.FakeCinderClient.Volumes.delete',
                 side_effect=cinder_exception.ClientException(500))
     def test_delete_failed(self, mock_execute, mock_delete):
         fd, tmpfname = tempfile.mkstemp()
@@ -211,11 +315,14 @@ class TestCinder(base.TestCase):
 
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
     def test_list(self):
-        docker_volumes = self.cinderprovider.list()
-        self.assertEqual(docker_volumes, [])
+        fake_vols = [fake_object.FakeCinderVolume(name='fake-vol1')]
+        with mock.patch.object(fake_client.FakeCinderClient.Volumes, 'list',
+                               return_value=fake_vols):
+            self.assertEqual([{'Name': 'fake-vol1', 'Mountpoint': ''}],
+                             self.cinderprovider.list())
 
     @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
-    @mock.patch('fuxi.tests.fake_client.FakeCinderClient.Volumes.list',
+    @mock.patch('fuxi.tests.unit.fake_client.FakeCinderClient.Volumes.list',
                 side_effect=cinder_exception.ClientException(500))
     def test_list_failed(self, mock_list):
         self.assertRaises(cinder_exception.ClientException,
@@ -265,6 +372,58 @@ class TestCinder(base.TestCase):
                                    return_value=fake_mountpoint):
                 self.assertEqual(fake_mountpoint,
                                  self.cinderprovider.mount('fake-vol'))
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(status=None),
+                                     None))
+    def test_mount_state_not_match(self, mock_docker_volume):
+        self.assertRaises(exceptions.NotMatchedState,
+                          self.cinderprovider.mount,
+                          'fake-vol')
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                       return_value=(fake_object.FakeCinderVolume(),
+                                     consts.NOT_ATTACH))
+    @mock.patch.object(cinder.Cinder, '_create_mountpoint')
+    @mock.patch.object(mount, 'do_mount')
+    def test_mount_state_not_attach(self, mock_docker_volume,
+                                    mock_create_mp, mock_do_mount):
+        fd, fake_devpath = tempfile.mkstemp()
+        fake_link_path = fake_devpath
+        fake_mountpoint = 'fake-mount-point/'
+        with mock.patch.object(FakeCinderConnector, 'get_device_path',
+                               return_value=fake_link_path):
+            with mock.patch.object(cinder.Cinder, '_get_mountpoint',
+                                   return_value=fake_mountpoint):
+                self.assertEqual(fake_mountpoint,
+                                 self.cinderprovider.mount('fake-vol'))
+
+    @mock.patch.object(cinder.Cinder, '_get_connector', mock_connector)
+    @mock.patch.object(cinder.Cinder, '_create_mountpoint')
+    @mock.patch.object(mount, 'do_mount')
+    def test_mount_state_attach_to_other(self, mock_create_mp, mock_do_mount):
+        fd, fake_devpath = tempfile.mkstemp()
+        fake_link_path = fake_devpath
+        fake_mountpoint = 'fake-mount-point/'
+        with mock.patch.object(FakeCinderConnector, 'get_device_path',
+                               return_value=fake_link_path):
+            with mock.patch.object(cinder.Cinder, '_get_mountpoint',
+                                   return_value=fake_mountpoint):
+                fake_c_vol = fake_object.FakeCinderVolume(multiattach=True)
+                with mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                                       return_value=(fake_c_vol,
+                                                     consts.ATTACH_TO_OTHER)):
+                    self.assertEqual(fake_mountpoint,
+                                     self.cinderprovider.mount('fake-vol'))
+
+                fake_c_vol = fake_object.FakeCinderVolume(multiattach=False)
+                with mock.patch.object(cinder.Cinder, '_get_docker_volume',
+                                       return_value=(fake_c_vol,
+                                                     consts.ATTACH_TO_OTHER)):
+                    self.assertRaises(exceptions.FuxiException,
+                                      self.cinderprovider.mount, 'fake-vol')
 
     def test_unmount(self):
         self.assertIsNone(self.cinderprovider.unmount('fake-vol'))

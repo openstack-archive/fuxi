@@ -1,0 +1,24 @@
+FUXI_HOME=${FUXI_HOME:-$DEST/fuxi}
+FUXI_ACTIVATOR_FILENAME=fuxi.spec
+FUXI_DEFAULT_ACTIVATOR=${FUXI_HOME}/etc/${FUXI_ACTIVATOR_FILENAME}
+
+# See libnetwork's plugin discovery mechanism:
+#   https://github.com/docker/docker/blob/c4d45b6a29a91f2fb5d7a51ac36572f2a9b295c6/docs/extend/plugin_api.md#plugin-discovery
+FUXI_ACTIVATOR_DIR=${FUXI_ACTIVATOR_DIR:-/usr/lib/docker/plugins/fuxi}
+FUXI_ACTIVATOR=${FUXI_ACTIVATOR_DIR}/${FUXI_ACTIVATOR_FILENAME}
+
+FUXI_CONFIG_FILENAME=fuxi.conf
+FUXI_DEFAULT_CONFIG=${FUXI_HOME}/etc/${FUXI_CONFIG_FILENAME}
+FUXI_CONFIG_DIR=${FUXI_CONFIG_DIR:-/etc/fuxi}
+FUXI_CONFIG=${FUXI_CONFIG_DIR}/${FUXI_CONFIG_FILENAME}
+FUXI_AUTH_CACHE_DIR=${FUXI_AUTH_CACHE_DIR:-/var/cache/fuxi}
+
+FUXI_DOCKER_ENGINE_PORT=${FUXI_DOCKER_ENGINE_PORT:-2375}
+FUXI_DOCKER_ENGINE_SOCKET_FILE=${FUXI_DOCKER_ENGINE_SOCKET_FILE:-/var/run/docker.sock}
+FUXI_ETCD_PORT=${FUXI_ETCD_PORT:-4001}
+
+GITREPO["kuryr"]=${KURYR_REPO:-${GIT_BASE}/openstack/kuryr.git}
+GITBRANCH["kuryr"]=${KURYR_BRANCH:-master}
+GITDIR["kuryr"]=$DEST/kuryr
+
+enable_service fuxi etcd-server docker-engine

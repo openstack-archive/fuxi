@@ -49,7 +49,6 @@ def brick_get_connector_properties(multipath=False, enforce_multipath=False):
 
 
 def brick_get_connector(protocol, driver=None,
-                        execute=processutils.execute,
                         use_multipath=False,
                         device_scan_attempts=3,
                         *args, **kwargs):
@@ -63,7 +62,6 @@ def brick_get_connector(protocol, driver=None,
     return connector.InitiatorConnector.factory(
         protocol, root_helper,
         driver=driver,
-        execute=execute,
         use_multipath=use_multipath,
         device_scan_attempts=device_scan_attempts,
         *args, **kwargs)
@@ -81,13 +79,11 @@ class CinderConnector(fuxi_connector.Connector):
             conn_info = self.cinderclient.volumes.initialize_connection(
                 volume_id,
                 brick_get_connector_properties())
-            msg = _LI("Get connection information {0}").format(conn_info)
-            LOG.info(msg)
+            LOG.info(_LI("Get connection information %s"), conn_info)
             return conn_info
         except cinder_exception.ClientException as e:
-            msg = _LE("Error happened when initialize connection for volume. "
-                      "Error: {0}").format(e)
-            LOG.error(msg)
+            LOG.error(_LE("Error happened when initialize connection"
+                          " for volume. Error: %s"), e)
             raise
 
     def _connect_volume(self, volume):
@@ -106,16 +102,15 @@ class CinderConnector(fuxi_connector.Connector):
         except processutils.ProcessExecutionError as e:
             LOG.error(_LE("Failed to create link for device. %s"), e)
             raise
-        return {'path': link_path, 'iscsi_path': device_info['path']}
+        return {'path': link_path}
 
     def _disconnect_volume(self, volume):
         try:
             link_path = self.get_device_path(volume)
             utils.execute('rm', '-f', link_path, run_as_root=True)
         except processutils.ProcessExecutionError as e:
-            msg = _LE("Error happened when remove docker volume "
-                      "mountpoint directory. Error: {0}").format(e)
-            LOG.warn(msg)
+            LOG.warning(_LE("Error happened when remove docker volume"
+                            " mountpoint directory. Error: %s"), e)
 
         conn_info = self._get_connection_info(volume.id)
 
@@ -165,9 +160,9 @@ class CinderConnector(fuxi_connector.Connector):
                                              attachment_uuid=attachment_uuid)
             LOG.info(_LI("Disconnect volume successfully"))
         except cinder_exception.ClientException as e:
-            msg = _LE("Error happened when detach volume {0} {1} from this "
-                      "server. Error: {2}").format(volume.name, volume, e)
-            LOG.error(msg)
+            LOG.error(_LE("Error happened when detach volume %(vol)s from this"
+                          " server. Error: %(err)s"),
+                      {'vol': volume, 'err': e})
             raise
 
     def get_device_path(self, volume):

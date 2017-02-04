@@ -12,18 +12,18 @@
 
 import flask
 import os
+import random
 import requests
 import socket
+import string
 import traceback
-
-from fuxi.common import constants
-from fuxi import exceptions
-from fuxi.i18n import _LW, _LE
 
 from cinderclient import client as cinder_client
 from cinderclient import exceptions as cinder_exception
+from keystoneauth1 import exceptions as ka_exception
 from keystoneauth1.session import Session
 from keystoneclient.auth import get_plugin_class
+from kuryr.lib import utils as kuryr_utils
 from novaclient import client as nova_client
 from novaclient import exceptions as nova_exception
 from os_brick import exception as brick_exception
@@ -33,6 +33,11 @@ from oslo_log import log as logging
 from oslo_utils import importutils
 from oslo_utils import uuidutils
 from werkzeug import exceptions as w_exceptions
+
+from fuxi.common import config
+from fuxi.common import constants
+from fuxi import exceptions
+from fuxi.i18n import _LW, _LE
 
 cloud_init_conf = '/var/lib/cloud/instances'
 
@@ -68,7 +73,7 @@ def get_instance_uuid():
         metadata_api_versions = resp.text.split()
         metadata_api_versions.sort(reverse=True)
     except Exception as e:
-        LOG.error(_LE("Get metadata apis failed. Error: {}").format(e))
+        LOG.error(_LE("Get metadata apis failed. Error: %s"), e)
         raise exceptions.FuxiException("Metadata API Not Found")
 
     for api_version in metadata_api_versions:
@@ -82,8 +87,9 @@ def get_instance_uuid():
             if metadata.get('uuid', None):
                 return metadata['uuid']
         except Exception as e:
-            LOG.warning(_LW("Get instance_uuid from metadata server {0} "
-                            "failed. Error: {1}").format(metadata_url, e))
+            LOG.warning(_LW("Get instance_uuid from metadata server"
+                            " %(md_url)s failed. Error: %(err)s"),
+                        {'md_url': metadata_url, 'err': e})
             continue
 
     raise exceptions.FuxiException("Instance UUID Not Found")
@@ -138,7 +144,7 @@ def _openstack_auth_from_config(**config):
     return plugin_class(**plugin_kwargs)
 
 
-def get_keystone_session(**kwargs):
+def get_legacy_keystone_session(**kwargs):
     keystone_conf = CONF.keystone
     config = {}
     config['auth_url'] = keystone_conf.auth_url
@@ -156,23 +162,27 @@ def get_keystone_session(**kwargs):
     return Session(auth=_openstack_auth_from_config(**config), verify=verify)
 
 
-def get_cinderclient(session=None, region=None, **kwargs):
-    if not session:
-        session = get_keystone_session(**kwargs)
-    if not region:
-        region = CONF.keystone['region']
+def get_keystone_session(conf_group, **kwargs):
+    try:
+        auth_plugin = kuryr_utils.get_auth_plugin(conf_group)
+        session = kuryr_utils.get_keystone_session(conf_group, auth_plugin)
+        return session, auth_plugin
+    except ka_exception.MissingRequiredOptions:
+        return get_legacy_keystone_session(**kwargs), None
+
+
+def get_cinderclient(*args, **kwargs):
+    session, auth_plugin = get_keystone_session(config.cinder_group.name)
     return cinder_client.Client(session=session,
-                                region_name=region,
+                                auth=auth_plugin,
+                                region_name=CONF.cinder.region_name,
                                 version=2)
 
 
-def get_novaclient(session=None, region=None, **kwargs):
-    if not session:
-        session = get_keystone_session(**kwargs)
-    if not region:
-        region = CONF.keystone['region']
+def get_novaclient(*args, **kwargs):
+    session, auth_plugin = get_keystone_session(config.nova_group.name)
     return nova_client.Client(session=session,
-                              region_name=region,
+                              auth=auth_plugin,
                               version=2)
 
 
@@ -185,3 +195,7 @@ def execute(*cmd, **kwargs):
         kwargs['root_helper'] = get_root_helper()
 
     return processutils.execute(*cmd, **kwargs)
+
+
+def get_random_string(n=10):
+    return ''.join(random.choice(string.ascii_lowercase) for _ in range(n))
