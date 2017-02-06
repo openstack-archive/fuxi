@@ -42,7 +42,12 @@ Installing Fuxi
 Configuring Fuxi
 ----------------
 
-After installing Fuxi, there will generate a configuration file `/etc/fuxi/fuxi.conf`, then edit it.
+* Generating config file
+
+::
+    $ tox -egenconfig
+    $ sudo cp etc/fuxi/fuxi.conf.sample /etc/fuxi/fuxi.conf
+
 
 * Default section
 
