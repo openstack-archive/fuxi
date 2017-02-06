@@ -21,12 +21,6 @@ _translators = oslo_i18n.TranslatorFactory(domain=DOMAIN)
 # The primary translation function using the well-known name "_"
 _ = _translators.primary
 
-# The contextual translation function using the name "_C"
-_C = _translators.contextual_form
-
-# The plural translation function using the name "_P"
-_P = _translators.plural_form
-
 # Translators for log levels.
 #
 # The abbreviated names are meant to reflect the usual use of a short
