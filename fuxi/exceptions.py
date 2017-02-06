@@ -12,7 +12,7 @@
 
 
 class FuxiException(Exception):
-    """Default Kuryr exception"""
+    """Default Fuxi exception"""
 
 
 class TimeoutException(FuxiException):
