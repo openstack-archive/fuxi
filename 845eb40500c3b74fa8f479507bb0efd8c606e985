@@ -1,0 +1,10 @@
+Code-Review+1: Hongbin Lu <hongbin.lu@huawei.com>
+Code-Review+2: Zhang Ni <zhangni@huawei.com>
+Code-Review+2: Liping Mao <limao@cisco.com>
+Workflow+1: Zhang Ni <zhangni@huawei.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 07 Feb 2017 01:28:08 +0000
+Reviewed-on: https://review.openstack.org/425998
+Project: openstack/fuxi
+Branch: refs/heads/master
