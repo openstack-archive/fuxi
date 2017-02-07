@@ -59,6 +59,8 @@ def brick_get_connector(protocol, driver=None,
     """
 
     root_helper = utils.get_root_helper()
+    if protocol.upper() == "RBD":
+        kwargs['do_local_attach'] = True
     return connector.InitiatorConnector.factory(
         protocol, root_helper,
         driver=driver,
