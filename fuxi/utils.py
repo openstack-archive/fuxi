@@ -186,6 +186,7 @@ def get_novaclient(*args, **kwargs):
     session, auth_plugin = get_keystone_session(config.nova_group.name)
     return nova_client.Client(session=session,
                               auth=auth_plugin,
+                              region_name=CONF.nova.region_name,
                               version=2)
 
 
