@@ -13,6 +13,7 @@
 import mock
 
 from cinderclient import exceptions as cinder_exception
+from manilaclient.common.apiclient import exceptions as manila_exception
 
 from fuxi.common import state_monitor
 from fuxi import exceptions
@@ -81,3 +82,116 @@ class TestStateMonitor(base.TestCase):
                                return_value=fake_desired_volume):
             self.assertRaises(exceptions.UnexpectedStateException,
                               fake_state_monitor.monitor_cinder_volume)
+
+    def test_monitor_manila_share(self):
+        fake_manila_client = fake_client.FakeManilaClient()
+        fake_manila_share = fake_object.FakeManilaShare(status='creating')
+        fake_desired_state = 'available'
+        fake_transient_states = ('creating',)
+        fake_state_monitor = state_monitor.StateMonitor(fake_manila_client,
+                                                        fake_manila_share,
+                                                        fake_desired_state,
+                                                        fake_transient_states,
+                                                        0)
+
+        fake_desired_share = fake_object.FakeManilaShare(status='available')
+        with mock.patch.object(fake_client.FakeManilaClient.Shares, 'get',
+                               return_value=fake_desired_share):
+            self.assertEqual(fake_desired_share,
+                             fake_state_monitor.monitor_manila_share())
+
+    def test_monitor_manila_share_get_failed(self):
+        fake_manila_client = fake_client.FakeManilaClient()
+        fake_manila_share = fake_object.FakeManilaShare(status='creating')
+
+        with mock.patch('fuxi.tests.unit.fake_client'
+                        '.FakeManilaClient.Shares.get',
+                        side_effect=manila_exception.ClientException(404)):
+            fake_state_monitor = state_monitor.StateMonitor(fake_manila_client,
+                                                            fake_manila_share,
+                                                            None, None, -1)
+            self.assertRaises(exceptions.TimeoutException,
+                              fake_state_monitor.monitor_manila_share)
+
+        with mock.patch('fuxi.tests.unit.fake_client'
+                        '.FakeManilaClient.Shares.get',
+                        side_effect=manila_exception.ClientException(404)):
+            fake_state_monitor = state_monitor.StateMonitor(fake_manila_client,
+                                                            fake_manila_share,
+                                                            None, None)
+            self.assertRaises(manila_exception.ClientException,
+                              fake_state_monitor.monitor_manila_share)
+
+    def test_monitor_manila_share_unexpected_state(self):
+        fake_manila_client = fake_client.FakeManilaClient()
+        fake_manila_share = fake_object.FakeManilaShare(status='creating')
+
+        fake_state_monitor = state_monitor.StateMonitor(fake_manila_client,
+                                                        fake_manila_share,
+                                                        'available',
+                                                        ('creating',),
+                                                        0)
+        fake_desired_share = fake_object.FakeCinderVolume(status='unknown')
+
+        with mock.patch.object(fake_client.FakeManilaClient.Shares, 'get',
+                               return_value=fake_desired_share):
+            self.assertRaises(exceptions.UnexpectedStateException,
+                              fake_state_monitor.monitor_manila_share)
+
+    def test_monitor_share_access(self):
+        fake_manila_client = fake_client.FakeManilaClient()
+        fake_manila_share = fake_object.FakeManilaShare()
+        fake_state_monitor = state_monitor.StateMonitor(fake_manila_client,
+                                                        fake_manila_share,
+                                                        'active',
+                                                        ('new',),
+                                                        0)
+
+        fake_desired_sl = [fake_object.FakeShareAccess(
+            access_type='ip', access_to='192.168.0.1', state='active')]
+        with mock.patch.object(fake_client.FakeManilaClient.Shares,
+                               'access_list',
+                               return_value=fake_desired_sl):
+            self.assertEqual(fake_manila_share,
+                             fake_state_monitor.monitor_share_access(
+                                 'ip', '192.168.0.1'))
+
+    def test_monitor_share_access_list_failed(self):
+        fake_manila_client = fake_client.FakeManilaClient()
+        fake_manila_share = fake_object.FakeManilaShare()
+        with mock.patch('fuxi.tests.unit.fake_client.FakeManilaClient.Shares'
+                        '.access_list',
+                        side_effect=manila_exception.ClientException(404)):
+            fake_state_monitor = state_monitor.StateMonitor(fake_manila_client,
+                                                            fake_manila_share,
+                                                            None, None, -1)
+            self.assertRaises(exceptions.TimeoutException,
+                              fake_state_monitor.monitor_share_access,
+                              'ip', '192.168.0.1')
+
+        with mock.patch('fuxi.tests.unit.fake_client.FakeManilaClient.Shares'
+                        '.access_list',
+                        side_effect=manila_exception.ClientException(404)):
+            fake_state_monitor = state_monitor.StateMonitor(fake_manila_client,
+                                                            fake_manila_share,
+                                                            None, None)
+            self.assertRaises(manila_exception.ClientException,
+                              fake_state_monitor.monitor_share_access,
+                              'ip', '192.168.0.1')
+
+    def test_monitor_share_access_unexpected_state(self):
+        fake_manila_client = fake_client.FakeManilaClient()
+        fake_manila_share = fake_object.FakeManilaShare()
+
+        fake_state_monitor = state_monitor.StateMonitor(fake_manila_client,
+                                                        fake_manila_share,
+                                                        'active',
+                                                        ('new',),
+                                                        0)
+        fake_desired_sl = [fake_object.FakeShareAccess(
+            access_type='ip', access_to='192.168.0.1', state='unknown')]
+        with mock.patch.object(fake_client.FakeManilaClient.Shares,
+                               'access_list', return_value=fake_desired_sl):
+            self.assertRaises(exceptions.UnexpectedStateException,
+                              fake_state_monitor.monitor_share_access,
+                              'ip', '192.168.0.1')

@@ -25,6 +25,9 @@ ATTACH_TO_OTHER = 'attach_to_other'
 # with backend providers in some cases.
 VOLUME_LINK_DIR = '/dev/disk/by-id/'
 
+# General scanning interval for some operation.
+SCAN_INTERVAL = 0.3
+
 # Volume scanning interval
 VOLUME_SCAN_TIME_DELAY = 0.3
 
@@ -42,3 +45,19 @@ DEVICE_SCAN_TIMEOUT = 10
 
 # Timeout for querying meta-data from localhost
 CURL_MD_TIMEOUT = 10
+
+# Manila
+# Manila share scanning interval
+SHARE_SCAN_INTERVAL = 0.3
+
+# Manila share network scanning interval
+SHARE_NETWORK_SCAN_INTERVAL = 0.3
+
+# TIMEOUT for destroying share from Manila
+DESTROY_SHARE_TIMEOUT = 300
+
+# TIMEOUT for destroying share network from Manila
+DESTROY_SHARE_NETWORK_TIMEOUT = 300
+
+# Timeout for revoke access to Manila share for host
+ACCSS_DENY_TIMEOUT = 300
