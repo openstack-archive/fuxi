@@ -17,10 +17,8 @@ from kuryr.lib import opts as kuryr_opts
 from oslo_config import cfg
 from oslo_log import log as logging
 
-from fuxi import i18n
+from fuxi.i18n import _
 from fuxi.version import version_info
-
-_ = i18n._
 
 default_opts = [
     cfg.StrOpt('my_ip',
