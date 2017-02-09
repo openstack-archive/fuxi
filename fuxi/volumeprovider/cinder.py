@@ -191,7 +191,7 @@ class Cinder(provider.Provider):
             time_delay=consts.VOLUME_SCAN_TIME_DELAY)
         volume = volume_monitor.monitor_cinder_volume()
 
-        LOG.info(_LI("Create docker volume %(d_v)s %(vols) from Cinder "
+        LOG.info(_LI("Create docker volume %(d_v)s %(vol)s from Cinder "
                      "successfully"),
                  {'d_v': docker_volume_name, 'vol': volume})
         return volume
@@ -429,7 +429,7 @@ class Cinder(provider.Provider):
 
     def show(self, docker_volume_name):
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume %s(d_v)s %(vol)s with state %(st)s"),
+        LOG.info(_LI("Get docker volume %(d_v)s %(vol)s with state %(st)s"),
                  {'d_v': docker_volume_name, 'vol': cinder_volume,
                   'st': state})
 
@@ -461,7 +461,7 @@ class Cinder(provider.Provider):
 
     def mount(self, docker_volume_name):
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume %s(d_v)s %(vol)s with state %(st)s"),
+        LOG.info(_LI("Get docker volume %(d_v)s %(vol)s with state %(st)s"),
                  {'d_v': docker_volume_name, 'vol': cinder_volume,
                   'st': state})
 
@@ -510,7 +510,7 @@ class Cinder(provider.Provider):
 
     def check_exist(self, docker_volume_name):
         _, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume %s(d_v)s with state %(st)s"),
+        LOG.info(_LI("Get docker volume %(d_v)s with state %(st)s"),
                  {'d_v': docker_volume_name, 'st': state})
 
         if state == UNKNOWN:
