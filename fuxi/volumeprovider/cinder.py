@@ -254,19 +254,20 @@ class Cinder(provider.Provider):
 
         connector = self._get_connector()
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume {0} {1} with state "
-                     "{2}").format(docker_volume_name, cinder_volume, state))
+        LOG.info(_LI("Get docker volume %(d_v)s %(vol)s with state %(st)s"),
+                 {'d_v': docker_volume_name, 'vol': cinder_volume,
+                  'st': state})
 
         device_info = {}
         if state == ATTACH_TO_THIS:
-            LOG.warning(_LW("The volume {0} {1} already exists and attached "
-                            "to this server").format(docker_volume_name,
-                                                     cinder_volume))
+            LOG.warning(_LW("The volume %(d_v)s %(vol)s already exists "
+                            "and attached to this server"),
+                        {'d_v': docker_volume_name, 'vol': cinder_volume})
             device_info = {'path': connector.get_device_path(cinder_volume)}
         elif state == NOT_ATTACH:
-            LOG.warning(_LW("The volume {0} {1} is already exists but not "
-                            "attached").format(docker_volume_name,
-                                               cinder_volume))
+            LOG.warning(_LW("The volume %(d_v)s %(vol)s is already exists "
+                            "but not attached"),
+                        {'d_v': docker_volume_name, 'vol': cinder_volume})
             device_info = connector.connect_volume(cinder_volume)
         elif state == ATTACH_TO_OTHER:
             if cinder_volume.multiattach:
@@ -274,10 +275,11 @@ class Cinder(provider.Provider):
                 vol_fstype = cinder_volume.metadata.get('fstype',
                                                         cinder_conf.fstype)
                 if fstype != vol_fstype:
-                    msg = _LE("Volume already exists with fstype: {0}, but "
-                              "currently provided fstype is {1}, not "
-                              "match").format(vol_fstype, fstype)
-                    LOG.error(msg)
+                    LOG.error(
+                        _LE("Volume already exists with fstype: %{v_fs}s, but "
+                            "currently provided fstype is %{fs}s, not "
+                            "match"),
+                        {'v_fs': vol_fstype, 'fs': fstype})
                     raise exceptions.FuxiException('FSType Not Match')
                 device_info = connector.connect_volume(cinder_volume)
             else:
