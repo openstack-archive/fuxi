@@ -15,6 +15,7 @@ Contents:
    installation
    usage
    contributing
+   reno.rst
 
 Indices and tables
 ==================
