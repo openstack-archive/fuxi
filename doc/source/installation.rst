@@ -89,6 +89,7 @@ Then edit it.
 ::
 
     [nova]
+    region_name = REGION_NAME  # Region name of this node. This is used when picking the URL in the service catalog.
     auth_url = AUTH_URL # For example, it can be http://127.0.0.1:35357/v3/
     username = ADMIN_USER
     user_domain_name = Default
