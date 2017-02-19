@@ -336,7 +336,7 @@ class Cinder(provider.Provider):
     def delete(self, docker_volume_name):
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
         LOG.info(_LI("Get docker volume %(d_v)s %(vol)s with state %(st)s"),
-                 {'d_v': docker_volume_name, 'vol':  cinder_volume,
+                 {'d_v': docker_volume_name, 'vol': cinder_volume,
                   'st': state})
 
         if state == ATTACH_TO_THIS:
