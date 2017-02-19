@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to fuxi's documentation!
-========================================================
+================================
 
 Contents:
 
@@ -15,6 +15,14 @@ Contents:
    installation
    usage
    contributing
+
+Developer Docs
+==============
+
+.. toctree::
+   :maxdepth: 1
+
+   devref/index
 
 Indices and tables
 ==================
