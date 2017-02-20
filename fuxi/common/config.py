@@ -122,6 +122,13 @@ nova_group = cfg.OptGroup(
     title='Nova Options',
     help=_('Configuration options for OpenStack Nova'))
 
+nova_opts = [
+    cfg.StrOpt('region_name',
+               default=os.environ.get('REGION'),
+               help=_('Region name of this node. This is used when picking'
+                      ' the URL in the service catalog.'))
+]
+
 manila_group = cfg.OptGroup(
     'manila',
     title='Manila Options',
@@ -154,6 +161,7 @@ CONF = cfg.CONF
 CONF.register_opts(default_opts)
 CONF.register_opts(legacy_keystone_opts, group=keystone_group.name)
 CONF.register_opts(cinder_opts, group=cinder_group.name)
+CONF.register_opts(nova_opts, group=nova_group.name)
 
 CONF.register_group(manila_group)
 CONF.register_opts(manila_opts, group=manila_group)
