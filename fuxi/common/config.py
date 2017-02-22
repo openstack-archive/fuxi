@@ -17,10 +17,8 @@ from kuryr.lib import opts as kuryr_opts
 from oslo_config import cfg
 from oslo_log import log as logging
 
-from fuxi import i18n
+from fuxi.i18n import _
 from fuxi.version import version_info
-
-_ = i18n._
 
 default_opts = [
     cfg.StrOpt('my_ip',
@@ -124,11 +122,50 @@ nova_group = cfg.OptGroup(
     title='Nova Options',
     help=_('Configuration options for OpenStack Nova'))
 
+nova_opts = [
+    cfg.StrOpt('region_name',
+               default=os.environ.get('REGION'),
+               help=_('Region name of this node. This is used when picking'
+                      ' the URL in the service catalog.'))
+]
+
+manila_group = cfg.OptGroup(
+    'manila',
+    title='Manila Options',
+    help=_('Configuration options for OpenStack Manila'))
+
+manila_opts = [
+    cfg.StrOpt('region_name',
+               default=os.environ.get('REGION'),
+               help=_('Region name of this node. This is used when picking'
+                      ' the URL in the service catalog.')),
+    cfg.StrOpt('volume_connector',
+               default='osbrick',
+               help=_('Volume connector for attach share to this server, '
+                      'or detach share from this server.')),
+    cfg.StrOpt('share_proto',
+               default='NFS',
+               help=_('Default protocol for manila share.')),
+    cfg.DictOpt('proto_access_type_map',
+                default={},
+                help=_('Set the access type for client to access share.')),
+    cfg.StrOpt('availability_zone',
+               default=None,
+               help=_('AZ in which the share is going to create.')),
+    cfg.StrOpt('access_to_for_cert',
+               default='',
+               help=_('The value to access share for access_type cert.'))
+]
 
 CONF = cfg.CONF
 CONF.register_opts(default_opts)
 CONF.register_opts(legacy_keystone_opts, group=keystone_group.name)
 CONF.register_opts(cinder_opts, group=cinder_group.name)
+CONF.register_opts(nova_opts, group=nova_group.name)
+
+CONF.register_group(manila_group)
+CONF.register_opts(manila_opts, group=manila_group)
+kuryr_config.register_keystoneauth_opts(CONF, manila_group.name)
 
 # Settting options for Keystone.
 kuryr_config.register_keystoneauth_opts(CONF, cinder_group.name)

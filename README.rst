@@ -22,7 +22,8 @@ and Docker container.
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/fuxi
 * Source: http://git.openstack.org/cgit/openstack/fuxi
-* Bugs: http://bugs.launchpad.net/Fuxi
+* Bugs: http://bugs.launchpad.net/fuxi
+* Blueprints: https://blueprints.launchpad.net/fuxi
 
 Features
 --------

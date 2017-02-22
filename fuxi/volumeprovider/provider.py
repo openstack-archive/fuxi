@@ -110,5 +110,6 @@ class Provider(object):
                 utils.execute('rm', '-r', mountpoint, run_as_root=True)
                 LOG.info(_LI("Clear mountpoint %s successfully"), mountpoint)
             except processutils.ProcessExecutionError as e:
-                LOG.error(_LE("Error happened when clear mountpoint {0}"), e)
+                LOG.error(_LE("Error happened when clear mountpoint. "
+                              "Error: %s"), e)
                 raise

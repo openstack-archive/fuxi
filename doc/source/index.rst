@@ -15,11 +15,11 @@ Contents:
    installation
    usage
    contributing
+   reno.rst
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 

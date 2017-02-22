@@ -1,0 +1,6 @@
+---
+features:
+  - Add support for cluster mode. In particular, users can create a Docker
+    volume in one node, and search it in other nodes. Before this feature
+    is implemented, each node manages its own set of volumes independently
+    and sharing volumes across different nodes in a cluster is impossible.

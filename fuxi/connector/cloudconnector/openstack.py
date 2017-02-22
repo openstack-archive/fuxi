@@ -105,7 +105,7 @@ class CinderConnector(connector.Connector):
                     raise
                 return {'path': link_path}
 
-        LOG.warm(_LW("Could not find matched device"))
+        LOG.warning(_LW("Could not find matched device"))
         raise exceptions.NotFound("Not Found Matched Device")
 
     def disconnect_volume(self, volume, **disconnect_opts):

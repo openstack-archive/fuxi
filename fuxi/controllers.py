@@ -26,9 +26,11 @@ from fuxi import utils
 CONF = cfg.CONF
 
 CINDER = 'cinder'
+MANILA = 'manila'
 
 volume_providers_conf = {
-    CINDER: 'fuxi.volumeprovider.cinder.Cinder', }
+    CINDER: 'fuxi.volumeprovider.cinder.Cinder',
+    MANILA: 'fuxi.volumeprovider.manila.Manila', }
 
 
 def init_app_conf():
@@ -112,7 +114,7 @@ def volumedriver_create():
             return flask.jsonify(Err=msg_fmt)
 
     # Create if volume does not exist, or attach to this server if needed
-    # if volume exists in related volume provider.
+    # volume exists in related volume provider.
     app.volume_providers[volume_provider_type].create(docker_volume_name,
                                                       volume_opts)
 

@@ -26,5 +26,8 @@ def list_fuxi_opts():
          itertools.chain(config.legacy_keystone_opts,)),
         (config.cinder_group.name,
          itertools.chain(config.cinder_opts, config.keystone_auth_opts)),
-        (config.nova_group.name, itertools.chain(config.keystone_auth_opts,))
+        (config.nova_group.name,
+         itertools.chain(config.nova_opts, config.keystone_auth_opts,)),
+        (config.manila_group.name,
+         itertools.chain(config.manila_opts, config.keystone_auth_opts))
     ]
