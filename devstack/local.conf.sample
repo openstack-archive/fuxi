@@ -14,3 +14,4 @@ ADMIN_PASSWORD=pass
 LIBS_FROM_GIT=kuryr
 
 enable_plugin fuxi https://git.openstack.org/openstack/fuxi
+enable_plugin manila https://github.com/openstack/manila
