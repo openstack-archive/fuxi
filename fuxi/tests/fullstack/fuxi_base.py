@@ -49,7 +49,7 @@ def get_cinder_client_from_env():
                              user_domain_id=user_domain_id,
                              user_domain_name=user_domain_name)
     session = ks.Session(auth=auth)
-    return client.Client(session=session)
+    return client.Client(session=session, auth=auth)
 
 
 def get_manila_client_from_env():
