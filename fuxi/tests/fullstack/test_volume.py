@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
 from fuxi.tests.fullstack import fuxi_base
 from fuxi import utils
 
@@ -36,6 +35,12 @@ class VolumeTest(fuxi_base.FuxiBaseTest):
         vol_name = utils.get_random_string(8)
         self.docker_client.create_volume(name=vol_name, driver='fuxi',
                                          driver_opts=driver_opts)
+        # Assure volume was created in Docker
+        self._assert_docker_volume_found(vol_name)
+        docker_volume = self.docker_client.inspect_volume(vol_name)
+        self.assertEqual('fuxi', docker_volume['Driver'])
+        self.assertEqual(vol_name, docker_volume['Name'])
+        # Assure volume was created in Cinder
         try:
             volumes = self.cinder_client.volumes.list(
                 search_opts={'all_tenants': 1, 'name': vol_name})
@@ -58,13 +63,53 @@ class VolumeTest(fuxi_base.FuxiBaseTest):
         """
         vol_name = utils.get_random_string(8)
         self.docker_client.create_volume(name=vol_name)
+        # Assure volume was created in Docker
+        self._assert_docker_volume_found(vol_name)
+        docker_volume = self.docker_client.inspect_volume(vol_name)
+        self.assertEqual('local', docker_volume['Driver'])
+        self.assertEqual(vol_name, docker_volume['Name'])
+        # Assure volume was NOT created in Cinder
         volumes = self.cinder_client.volumes.list(
             search_opts={'all_tenants': 1, 'name': vol_name})
         self.assertEqual(0, len(volumes))
+        self.docker_client.remove_volume(vol_name)
+
+    def test_create_from_existing_volume(self):
+        """Create docker volume with existing Cinder volume"""
+        vol_name = utils.get_random_string(8)
+        vol = self._create_cinder_volume(vol_name)
+        driver_opts = {
+            'volume_id': vol.id,
+            'fstype': 'ext4',
+            'multiattach': 'true',
+        }
+        self.docker_client.create_volume(name=vol_name, driver='fuxi',
+                                         driver_opts=driver_opts)
+        # Assure volume was created in Docker
+        self._assert_docker_volume_found(vol_name)
+        docker_volume = self.docker_client.inspect_volume(vol_name)
+        self.assertEqual('fuxi', docker_volume['Driver'])
+        self.assertEqual(vol_name, docker_volume['Name'])
+        self.docker_client.remove_volume(vol_name)
+
+    def _create_cinder_volume(self, vol_name):
+        # Start to create docker volume from Cinder
+        volume = self.cinder_client.volumes.create(name=vol_name, size=1)
+        # Waiting volume to be available
+        from fuxi.common import state_monitor
+        volume_monitor = state_monitor.StateMonitor(
+            self.cinder_client,
+            volume,
+            'available',
+            ('creating',),
+            time_delay=0.3)
+        volume = volume_monitor.monitor_cinder_volume()
+        return volume
+
+    def _assert_docker_volume_found(self, vol_name):
         docker_volumes = self.docker_client.volumes()['Volumes']
         volume_found = False
-        for docker_vol in docker_volumes:
+        for docker_vol in docker_volumes or {}:
             if docker_vol['Name'] == vol_name:
                 volume_found = True
         self.assertTrue(volume_found)
-        self.docker_client.remove_volume(vol_name)

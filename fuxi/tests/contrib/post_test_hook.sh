@@ -44,10 +44,15 @@ owner=stack
 cd $FUXI_DIR
 sudo chown -R $owner:stack $FUXI_DIR
 
+# Get admin credentials
+pushd ../devstack
+source openrc fuxi service
+popd
+
 # Run tests
 echo "Running Fuxi $venv fullstack tests"
 set +e
-sudo -H -u $owner tox -e $venv
+sudo -H -E -u $owner tox -e $venv
 testr_exit_code=$?
 set -e
 
