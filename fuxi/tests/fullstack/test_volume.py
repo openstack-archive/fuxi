@@ -31,7 +31,6 @@ class VolumeTest(fuxi_base.FuxiBaseTest):
         driver_opts = {
             'size': '1',
             'fstype': 'ext4',
-            'multiattach': 'true',
         }
         vol_name = utils.get_random_string(8)
         self.docker_client.create_volume(name=vol_name, driver='fuxi',
