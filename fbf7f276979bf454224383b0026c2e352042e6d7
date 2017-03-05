@@ -1,0 +1,12 @@
+Code-Review+1: dengshaolin <drngsl@qq.com>
+Code-Review+2: Zhang Ni <zhangni@huawei.com>
+Code-Review+1: Jaivish Kothari(janonymous) <jaivish.kothari@nectechnologies.in>
+Code-Review+1: Hongbin Lu <hongbin.lu@huawei.com>
+Code-Review+2: Antoni Segura Puimedon <celebdor@gmail.com>
+Workflow+1: Antoni Segura Puimedon <celebdor@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Sun, 05 Mar 2017 22:52:29 +0000
+Reviewed-on: https://review.openstack.org/434713
+Project: openstack/fuxi
+Branch: refs/heads/master
