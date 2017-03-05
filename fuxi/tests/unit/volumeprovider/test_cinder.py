@@ -10,7 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 from mock import mock
 import os
 import tempfile
@@ -30,8 +29,6 @@ volume_link_dir = consts.VOLUME_LINK_DIR
 DEFAULT_VOLUME_ID = fake_object.DEFAULT_VOLUME_ID
 
 CONF = config.CONF
-
-LOG = logging.getLogger(__name__)
 
 
 class FakeCinderConnector(object):
