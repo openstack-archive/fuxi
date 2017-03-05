@@ -15,7 +15,8 @@ Contents:
    installation
    usage
    contributing
-   reno.rst
+   reno
+   fullstack-test
 
 Developer Docs
 ==============
