@@ -108,8 +108,8 @@ def make_json_app(import_name, **kwargs):
     @app.errorhandler(processutils.ProcessExecutionError)
     @app.errorhandler(brick_exception.BrickException)
     def make_json_error(ex):
-        app.logger.error(_LE("Unexpected error happened: %s"),
-                         traceback.format_exc())
+        LOG.error(_LE("Unexpected error happened: %s"),
+                  traceback.format_exc())
         response = flask.jsonify({"Err": str(ex)})
         response.status_code = w_exceptions.InternalServerError.code
         if isinstance(ex, w_exceptions.HTTPException):
