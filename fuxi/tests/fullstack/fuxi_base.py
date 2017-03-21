@@ -14,7 +14,6 @@ import docker
 import os
 
 from cinderclient.v2 import client
-from fuxi.i18n import _LW
 from keystoneauth1 import identity
 from keystoneauth1 import session as ks
 import os_client_config
@@ -88,10 +87,10 @@ class FuxiBaseTest(base.BaseTestCase):
             self.cinder_client = get_cinder_client_from_env()
         except Exception as e:
             # We may missing or didn't source configured openrc file.
-            message = _LW('Missing environment variable %s in your local. '
-                          'Please add it and also check other missing '
-                          'environment variables. After that please source '
-                          'the openrc file. '
-                          'Trying credentials from DevStack cloud.yaml ...')
+            message = 'Missing environment variable %s in your local. '
+                      'Please add it and also check other missing '
+                      'environment variables. After that please source '
+                      'the openrc file. '
+                      'Trying credentials from DevStack cloud.yaml ...'
             LOG.warning(message, e.args[0])
             self.cinder_client = get_cinder_client_from_creds()

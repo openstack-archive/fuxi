@@ -16,7 +16,6 @@ from oslo_log import log as logging
 from oslo_utils import units
 
 from fuxi import exceptions
-from fuxi.i18n import _LE
 
 LOG = logging.getLogger(__name__)
 
@@ -32,5 +31,5 @@ class BlockerDeviceManager(object):
                 .read().rstrip('\n')
             return (float(nr_sectors) * float(sect_size)) / units.Gi
         except IOError as e:
-            LOG.error(_LE("Failed to read device size. %s"), e)
+            LOG.error("Failed to read device size. %s", e)
             raise exceptions.FuxiException(e.message)

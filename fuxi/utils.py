@@ -39,7 +39,6 @@ from werkzeug import exceptions as w_exceptions
 from fuxi.common import config
 from fuxi.common import constants
 from fuxi import exceptions
-from fuxi.i18n import _LW, _LE
 
 cloud_init_conf = '/var/lib/cloud/instances'
 
@@ -75,7 +74,7 @@ def get_instance_uuid():
         metadata_api_versions = resp.text.split()
         metadata_api_versions.sort(reverse=True)
     except Exception as e:
-        LOG.error(_LE("Get metadata apis failed. Error: %s"), e)
+        LOG.error("Get metadata apis failed. Error: %s", e)
         raise exceptions.FuxiException("Metadata API Not Found")
 
     for api_version in metadata_api_versions:
@@ -89,8 +88,8 @@ def get_instance_uuid():
             if metadata.get('uuid', None):
                 return metadata['uuid']
         except Exception as e:
-            LOG.warning(_LW("Get instance_uuid from metadata server"
-                            " %(md_url)s failed. Error: %(err)s"),
+            LOG.warning("Get instance_uuid from metadata server"
+                        " %(md_url)s failed. Error: %(err)s",
                         {'md_url': metadata_url, 'err': e})
             continue
 
@@ -108,7 +107,7 @@ def make_json_app(import_name, **kwargs):
     @app.errorhandler(processutils.ProcessExecutionError)
     @app.errorhandler(brick_exception.BrickException)
     def make_json_error(ex):
-        LOG.error(_LE("Unexpected error happened: %s"),
+        LOG.error("Unexpected error happened: %s",
                   traceback.format_exc())
         response = flask.jsonify({"Err": str(ex)})
         response.status_code = w_exceptions.InternalServerError.code

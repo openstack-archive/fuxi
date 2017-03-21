@@ -30,7 +30,6 @@ from manilaclient.common.apiclient import exceptions as manila_exception
 from fuxi.common import constants as consts
 from fuxi.common import state_monitor
 from fuxi import exceptions
-from fuxi.i18n import _LI, _LW, _LE
 from fuxi import utils
 from fuxi.volumeprovider import provider
 
@@ -67,13 +66,13 @@ def extract_share_kwargs(docker_volume_name, docker_volume_opts):
         try:
             size = int(docker_volume_opts.pop('size'))
         except ValueError:
-            msg = _LE("Volume size must able to convert to int type")
+            msg = "Volume size must able to convert to int type"
             LOG.error(msg)
             raise exceptions.InvalidInput(msg)
     else:
         size = CONF.default_volume_size
-        LOG.info(_LI("Volume size doesn't provide from command, so use "
-                     "default size %sG"), size)
+        LOG.info("Volume size doesn't provide from command, so use "
+                 "default size %sG", size)
     kwargs['size'] = size
 
     share_proto = docker_volume_opts.pop('share_proto', None) \
@@ -99,7 +98,7 @@ class Manila(provider.Provider):
 
         conn_conf = manila_conf.volume_connector
         if not conn_conf or conn_conf not in volume_connector_conf:
-            msg = _LE("Must provide a valid volume connector")
+            msg = "Must provide a valid volume connector"
             LOG.error(msg)
             raise exceptions.InvalidInput(msg)
         self.connector = importutils.import_object(
@@ -116,8 +115,7 @@ class Manila(provider.Provider):
             docker_shares = self.manilaclient.shares.list(
                 search_opts=search_opts)
         except manila_exception.ClientException as e:
-            LOG.error(_LE("Could not retrieve Manila share list. Error: %s"),
-                      e)
+            LOG.error("Could not retrieve Manila share list. Error: %s", e)
             raise
 
         if not docker_shares:
@@ -143,16 +141,16 @@ class Manila(provider.Provider):
             LOG.debug("Start to create share from Manila")
             share = self.manilaclient.shares.create(**share_kwargs)
         except manila_exception.ClientException as e:
-            LOG.error(_LE("Create Manila share failed. Error: {0}"), e)
+            LOG.error("Create Manila share failed. Error: {0}", e)
             raise
 
-        LOG.info(_LI("Waiting for share %s status to be available"), share)
+        LOG.info("Waiting for share %s status to be available", share)
         share_monitor = state_monitor.StateMonitor(self.manilaclient,
                                                    share,
                                                    'available',
                                                    ('creating',))
         share = share_monitor.monitor_manila_share()
-        LOG.info(_LI("Creating share %s successfully"), share)
+        LOG.info("Creating share %s successfully", share)
         return share
 
     def _create_from_existing_share(self, docker_volume_name,
@@ -160,7 +158,7 @@ class Manila(provider.Provider):
         try:
             share = self.manilaclient.shares.get(share_id)
         except manila_exception.NotFound:
-            LOG.error(_LE("Could not find share %s"), share_id)
+            LOG.error("Could not find share %s", share_id)
             raise
 
         if share.status != 'available':
@@ -168,8 +166,8 @@ class Manila(provider.Provider):
                 "Manila share is unavailable")
 
         if share.name != docker_volume_name:
-            LOG.error(_LE("Provided volume name %(d_name)s does not match "
-                          "with existing share name %(s_name)s"),
+            LOG.error("Provided volume name %(d_name)s does not match "
+                      "with existing share name %(s_name)s",
                       {'d_name': docker_volume_name,
                        's_name': share.name})
             raise exceptions.InvalidInput('Volume name does not match')
@@ -184,8 +182,8 @@ class Manila(provider.Provider):
         try:
             share, state = self._get_docker_volume(docker_volume_name)
             if share:
-                LOG.warning(_LW("Volume %(vol)s already exists in Manila, and "
-                                "the related Manila share is %(share)s"),
+                LOG.warning("Volume %(vol)s already exists in Manila, and "
+                            "the related Manila share is %(share)s",
                             {'vol': docker_volume_name, 'share': share})
 
                 if state == NOT_ATTACH:
@@ -209,14 +207,14 @@ class Manila(provider.Provider):
         try:
             share_access_list = self.manilaclient.shares.access_list(share)
             if len(share_access_list) > 0:
-                LOG.warning(_LE("Share %s is still used by other server, so "
-                                "should not delete it."), share)
+                LOG.warning("Share %s is still used by other server, so "
+                            "should not delete it."), share)
                 return
 
             self.manilaclient.shares.delete(share)
         except manila_exception.ClientException as e:
-            LOG.error(_LE("Error happened when delete Volume %(vol)s (Manila "
-                          "share: %(share)s). Error: %(err)s"),
+            LOG.error("Error happened when delete Volume %(vol)s (Manila "
+                      "share: %(share)s). Error: %(err)s",
                       {'vol': share.name, 'share': share, 'err': e})
             raise
 
@@ -255,8 +253,8 @@ class Manila(provider.Provider):
     def mount(self, docker_volume_name):
         share, state = self._get_docker_volume(docker_volume_name)
         if state == NOT_ATTACH:
-            LOG.warning(_LW("Find share %s, but not attach to this server, "
-                            "so connect it"), share)
+            LOG.warning("Find share %s, but not attach to this server, "
+                        "so connect it", share)
             self.connector.connect_volume(share)
 
         mountpoint = self.connector.get_mountpoint(share)
@@ -278,7 +276,7 @@ class Manila(provider.Provider):
             docker_shares = self.manilaclient.shares.list(
                 search_opts=search_opts)
         except manila_exception.ClientException as e:
-            LOG.error(_LE('Could not retrieve Manila shares. Error: %s'), e)
+            LOG.error('Could not retrieve Manila shares. Error: %s', e)
             raise
 
         docker_volumes = []
@@ -287,8 +285,8 @@ class Manila(provider.Provider):
             docker_volumes.append(
                 {'Name': share.name,
                  'Mountpoint': self.connector.get_mountpoint(share)})
-        LOG.info(_LI("Retrieve docker volumes %s from Manila "
-                     "successfully"), docker_volumes)
+        LOG.info("Retrieve docker volumes %s from Manila "
+                 "successfully", docker_volumes)
         return docker_volumes
 
     @utils.wrap_check_authorized

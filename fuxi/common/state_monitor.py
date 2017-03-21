@@ -18,7 +18,7 @@ from oslo_log import log as logging
 
 from fuxi.common import constants
 from fuxi import exceptions
-from fuxi.i18n import _LE
+
 
 LOG = logging.getLogger(__name__)
 
@@ -52,10 +52,10 @@ class StateMonitor(object):
                 self.transient_states = self.transient_states[idx:]
             return False
         else:
-            msg = _LE("Unexpected state while waiting for volume. "
-                      "Expected Volume: {0}, "
-                      "Expected State: {1}, "
-                      "Reached State: {2}").format(self.expected_obj,
+            msg = ("Unexpected state while waiting for volume. "
+                   "Expected Volume: {0}, "
+                   "Expected State: {1}, "
+                   "Reached State: {2}").format(self.expected_obj,
                                                    self.desired_state,
                                                    current_state)
             LOG.error(msg)
@@ -68,10 +68,10 @@ class StateMonitor(object):
             except cinder_exception.ClientException:
                 elapsed_time = time.time() - self.start_time
                 if elapsed_time > self.time_limit:
-                    msg = _LE("Timed out while waiting for volume. "
-                              "Expected Volume: {0}, "
-                              "Expected State: {1}, "
-                              "Elapsed Time: {2}").format(self.expected_obj,
+                    msg = "Timed out while waiting for volume. "
+                          "Expected Volume: {0}, "
+                          "Expected State: {1}, "
+                          "Elapsed Time: {2}".format(self.expected_obj,
                                                           self.desired_state,
                                                           elapsed_time)
                     LOG.error(msg)
@@ -90,10 +90,10 @@ class StateMonitor(object):
             except manila_exception.ClientException:
                 elapsed_time = time.time() - self.start_time
                 if elapsed_time > self.time_limit:
-                    msg = _LE("Timed out while waiting for share. "
-                              "Expected Share: {0}, "
-                              "Expected State: {1}, "
-                              "Elapsed Time: {2}").format(self.expected_obj,
+                    msg = "Timed out while waiting for share. "
+                          "Expected Share: {0}, "
+                          "Expected State: {1}, "
+                          "Elapsed Time: {2}").format(self.expected_obj,
                                                           self.desired_state,
                                                           elapsed_time)
                     raise exceptions.TimeoutException(msg)
@@ -111,9 +111,9 @@ class StateMonitor(object):
             except manila_exception.ClientException:
                 elapsed_time = time.time() - self.start_time
                 if elapsed_time > self.time_limit:
-                    msg = _LE("Timed out while waiting for share access. "
-                              "Expected State: {0}, "
-                              "Elapsed Time: {1}").format(self.desired_state,
+                    msg = "Timed out while waiting for share access. "
+                          "Expected State: {0}, "
+                          "Elapsed Time: {1}".format(self.desired_state,
                                                           elapsed_time)
                     raise exceptions.TimeoutException(msg)
                 raise

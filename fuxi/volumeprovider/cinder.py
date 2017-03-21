@@ -23,7 +23,6 @@ from fuxi.common import constants as consts
 from fuxi.common import mount
 from fuxi.common import state_monitor
 from fuxi import exceptions
-from fuxi.i18n import _, _LE, _LI, _LW
 from fuxi import utils
 from fuxi.volumeprovider import provider
 
@@ -68,13 +67,13 @@ def get_cinder_volume_kwargs(docker_volume_name, docker_volume_opt):
         try:
             size = int(docker_volume_opt.pop('size'))
         except ValueError:
-            msg = _LE("Volume size must be able to convert to int type")
+            msg = "Volume size must be able to convert to int type"
             LOG.error(msg)
             raise exceptions.InvalidInput(msg)
     else:
         size = CONF.default_volume_size
-        LOG.info(_LI("Volume size doesn't provide from command, so use"
-                     " default size %sG"), size)
+        LOG.info("Volume size doesn't provide from command, so use"
+                 " default size %sG", size)
     kwargs['size'] = size
 
     for key, value in docker_volume_opt.items():
@@ -119,7 +118,7 @@ class Cinder(provider.Provider):
     def _get_connector(self):
         connector = cinder_conf.volume_connector
         if not connector or connector not in volume_connector_conf:
-            msg = _LE("Must provide an valid volume connector")
+            msg = "Must provide an valid volume connector"
             LOG.error(msg)
             raise exceptions.FuxiException(msg)
         return importutils.import_class(volume_connector_conf[connector])()
@@ -130,8 +129,8 @@ class Cinder(provider.Provider):
                            'metadata': {consts.VOLUME_FROM: CONF.volume_from}}
             vols = self.cinderclient.volumes.list(search_opts=search_opts)
         except cinder_exception.ClientException as ex:
-            LOG.error(_LE("Error happened while getting volume list "
-                          "information from Cinder. Error: %s"), ex)
+            LOG.error("Error happened while getting volume list "
+                      "information from Cinder. Error: %s", ex)
             raise
 
         vol_num = len(vols)
@@ -168,7 +167,7 @@ class Cinder(provider.Provider):
         return False
 
     def _create_volume(self, docker_volume_name, volume_opts):
-        LOG.info(_LI("Start to create docker volume %s from Cinder"),
+        LOG.info("Start to create docker volume %s from Cinder",
                  docker_volume_name)
 
         cinder_volume_kwargs = get_cinder_volume_kwargs(docker_volume_name,
@@ -177,12 +176,12 @@ class Cinder(provider.Provider):
         try:
             volume = self.cinderclient.volumes.create(**cinder_volume_kwargs)
         except cinder_exception.ClientException as e:
-            LOG.error(_LE("Error happened when create an volume %(vol)s from"
-                          " Cinder. Error: %(err)s"),
+            LOG.error("Error happened when create an volume %(vol)s from"
+                      " Cinder. Error: %(err)s",
                       {'vol': docker_volume_name, 'err': e})
             raise
 
-        LOG.info(_LI("Waiting volume %s to be available"), volume)
+        LOG.info("Waiting volume %s to be available", volume)
         volume_monitor = state_monitor.StateMonitor(
             self.cinderclient,
             volume,
@@ -191,8 +190,8 @@ class Cinder(provider.Provider):
             time_delay=consts.VOLUME_SCAN_TIME_DELAY)
         volume = volume_monitor.monitor_cinder_volume()
 
-        LOG.info(_LI("Create docker volume %(d_v)s %(vol)s from Cinder "
-                     "successfully"),
+        LOG.info("Create docker volume %(d_v)s %(vol)s from Cinder "
+                 "successfully",
                  {'d_v': docker_volume_name, 'vol': volume})
         return volume
 
@@ -202,28 +201,28 @@ class Cinder(provider.Provider):
         try:
             cinder_volume = self.cinderclient.volumes.get(cinder_volume_id)
         except cinder_exception.ClientException as e:
-            msg = _LE("Failed to get volume %(vol_id)s from Cinder. "
-                      "Error: %(err)s")
+            msg = "Failed to get volume %(vol_id)s from Cinder. "
+                  "Error: %(err)s"
             LOG.error(msg, {'vol_id': cinder_volume_id, 'err': e})
             raise
 
         status = cinder_volume.status
         if status not in ('available', 'in-use'):
-            LOG.error(_LE("Current volume %(vol)s status %(status)s not in "
-                          "desired states"),
+            LOG.error("Current volume %(vol)s status %(status)s not in "
+                      "desired states",
                       {'vol': cinder_volume, 'status': status})
             raise exceptions.NotMatchedState('Cinder volume is unavailable')
         elif status == 'in-use' and not cinder_volume.multiattach:
             if not self._check_attached_to_this(cinder_volume):
-                msg = _LE("Current volume %(vol)s status %(status)s not "
-                          "in desired states")
+                msg = "Current volume %(vol)s status %(status)s not "
+                      "in desired states"
                 LOG.error(msg, {'vol': cinder_volume, 'status': status})
                 raise exceptions.NotMatchedState(
                     'Cinder volume is unavailable')
 
         if cinder_volume.name != docker_volume_name:
-            LOG.error(_LE("Provided volume name %(d_name)s does not match "
-                          "with existing Cinder volume name %(c_name)s"),
+            LOG.error("Provided volume name %(d_name)s does not match "
+                      "with existing Cinder volume name %(c_name)s",
                       {'d_name': docker_volume_name,
                        'c_name': cinder_volume.name})
             raise exceptions.InvalidInput('Volume name does not match')
@@ -232,9 +231,9 @@ class Cinder(provider.Provider):
         vol_fstype = cinder_volume.metadata.get('fstype',
                                                 cinder_conf.fstype)
         if fstype != vol_fstype:
-            LOG.error(_LE("Volume already exists with fstype %(c_fstype)s, "
-                          "but currently provided fstype is %(fstype)s, not "
-                          "match"), {'c_fstype': vol_fstype, 'fstype': fstype})
+            LOG.error("Volume already exists with fstype %(c_fstype)s, "
+                      "but currently provided fstype is %(fstype)s, not "
+                      "match", {'c_fstype': vol_fstype, 'fstype': fstype})
             raise exceptions.InvalidInput('FSType does not match')
 
         try:
@@ -242,8 +241,8 @@ class Cinder(provider.Provider):
                         'fstype': fstype}
             self.cinderclient.volumes.set_metadata(cinder_volume, metadata)
         except cinder_exception.ClientException as e:
-            LOG.error(_LE("Failed to update volume %(vol)s information. "
-                          "Error: %(err)s"),
+            LOG.error("Failed to update volume %(vol)s information. "
+                      "Error: %(err)s",
                       {'vol': cinder_volume_id, 'err': e})
             raise
         return cinder_volume
@@ -254,19 +253,19 @@ class Cinder(provider.Provider):
 
         connector = self._get_connector()
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume %(d_v)s %(vol)s with state %(st)s"),
+        LOG.info("Get docker volume %(d_v)s %(vol)s with state %(st)s",
                  {'d_v': docker_volume_name, 'vol': cinder_volume,
                   'st': state})
 
         device_info = {}
         if state == ATTACH_TO_THIS:
-            LOG.warning(_LW("The volume %(d_v)s %(vol)s already exists "
-                            "and attached to this server"),
+            LOG.warning("The volume %(d_v)s %(vol)s already exists "
+                        "and attached to this server",
                         {'d_v': docker_volume_name, 'vol': cinder_volume})
             device_info = {'path': connector.get_device_path(cinder_volume)}
         elif state == NOT_ATTACH:
-            LOG.warning(_LW("The volume %(d_v)s %(vol)s is already exists "
-                            "but not attached"),
+            LOG.warning("The volume %(d_v)s %(vol)s is already exists "
+                        "but not attached",
                         {'d_v': docker_volume_name, 'vol': cinder_volume})
             device_info = connector.connect_volume(cinder_volume)
         elif state == ATTACH_TO_OTHER:
@@ -276,15 +275,15 @@ class Cinder(provider.Provider):
                                                         cinder_conf.fstype)
                 if fstype != vol_fstype:
                     LOG.error(
-                        _LE("Volume already exists with fstype: %{v_fs}s, but "
-                            "currently provided fstype is %{fs}s, not "
-                            "match"),
+                        "Volume already exists with fstype: %{v_fs}s, but "
+                        "currently provided fstype is %{fs}s, not "
+                        "match",
                         {'v_fs': vol_fstype, 'fs': fstype})
                     raise exceptions.FuxiException('FSType Not Match')
                 device_info = connector.connect_volume(cinder_volume)
             else:
-                msg = _LE("The volume {0} {1} is already attached to another "
-                          "server").format(docker_volume_name, cinder_volume)
+                msg = "The volume {0} {1} is already attached to another "
+                      "server".format(docker_volume_name, cinder_volume)
                 LOG.error(msg)
                 raise exceptions.FuxiException(msg)
         elif state == UNKNOWN:
@@ -311,8 +310,8 @@ class Cinder(provider.Provider):
         except cinder_exception.NotFound:
             return
         except cinder_exception.ClientException as e:
-            LOG.error(_LE("Error happened when delete volume from Cinder."
-                          " Error: %s"), e)
+            LOG.error("Error happened when delete volume from Cinder."
+                      " Error: %s", e)
             raise
 
         start_time = time.time()
@@ -325,33 +324,33 @@ class Cinder(provider.Provider):
             time.sleep(consts.VOLUME_SCAN_TIME_DELAY)
 
         # If the volume is not deleted, raise an exception
-        msg_ft = _LE("Timed out while waiting for volume. "
-                     "Expected Volume: {0}, "
-                     "Expected State: {1}, "
-                     "Elapsed Time: {2}").format(volume,
+        msg_ft = "Timed out while waiting for volume. "
+                 "Expected Volume: {0}, "
+                 "Expected State: {1}, "
+                 "Elapsed Time: {2}").format(volume,
                                                  None,
                                                  time.time() - start_time)
         raise exceptions.TimeoutException(msg_ft)
 
     def delete(self, docker_volume_name):
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume %(d_v)s %(vol)s with state %(st)s"),
+        LOG.info("Get docker volume %(d_v)s %(vol)s with state %(st)s",
                  {'d_v': docker_volume_name, 'vol': cinder_volume,
                   'st': state})
 
         if state == ATTACH_TO_THIS:
             link_path = self._get_connector().get_device_path(cinder_volume)
             if not link_path or not os.path.exists(link_path):
-                msg = _LE(
+                msg = 
                     "Could not find device link path for volume {0} {1} "
-                    "in host").format(docker_volume_name, cinder_volume)
+                    "in host".format(docker_volume_name, cinder_volume)
                 LOG.error(msg)
                 raise exceptions.FuxiException(msg)
 
             devpath = os.path.realpath(link_path)
             if not os.path.exists(devpath):
-                msg = _LE("Could not find device path for volume {0} {1} in "
-                          "host").format(docker_volume_name, cinder_volume)
+                msg = "Could not find device path for volume {0} {1} in "
+                      "host".format(docker_volume_name, cinder_volume)
                 LOG.error(msg)
                 raise exceptions.FuxiException(msg)
 
@@ -380,8 +379,8 @@ class Cinder(provider.Provider):
             # than delete it from Cinder.
             if not available_volume.attachments:
                 LOG.warning(
-                    _LW("No other servers still use this volume %(d_v)s"
-                        " %(vol)s any more, so delete it from Cinder"),
+                    "No other servers still use this volume %(d_v)s"
+                    " %(vol)s any more, so delete it from Cinder",
                     {'d_v': docker_volume_name, 'vol': cinder_volume})
                 self._delete_volume(available_volume)
             return True
@@ -389,21 +388,21 @@ class Cinder(provider.Provider):
             self._delete_volume(cinder_volume)
             return True
         elif state == ATTACH_TO_OTHER:
-            msg = _LW("Volume %s is still in use, could not delete it")
+            msg = "Volume %s is still in use, could not delete it"
             LOG.warning(msg, cinder_volume)
             return True
         elif state == UNKNOWN:
             return False
         else:
-            msg = _LE("Volume %(vol_name)s %(c_vol)s "
-                      "state %(state)s is invalid")
+            msg = "Volume %(vol_name)s %(c_vol)s "
+                  "state %(state)s is invalid"
             LOG.error(msg, {'vol_name': docker_volume_name,
                             'c_vol': cinder_volume,
                             'state': state})
             raise exceptions.NotMatchedState()
 
     def list(self):
-        LOG.info(_LI("Start to retrieve all docker volumes from Cinder"))
+        LOG.info("Start to retrieve all docker volumes from Cinder")
 
         docker_volumes = []
         try:
@@ -422,16 +421,16 @@ class Cinder(provider.Provider):
                               'Mountpoint': mountpoint}
                 docker_volumes.append(docker_vol)
         except cinder_exception.ClientException as e:
-            LOG.error(_LE("Retrieve volume list failed. Error: %s"), e)
+            LOG.error("Retrieve volume list failed. Error: %s", e)
             raise
 
-        LOG.info(_LI("Retrieve docker volumes %s from Cinder "
-                     "successfully"), docker_volumes)
+        LOG.info("Retrieve docker volumes %s from Cinder "
+                 "successfully", docker_volumes)
         return docker_volumes
 
     def show(self, docker_volume_name):
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume %(d_v)s %(vol)s with state %(st)s"),
+        LOG.info("Get docker volume %(d_v)s %(vol)s with state %(st)s",
                  {'d_v': docker_volume_name, 'vol': cinder_volume,
                   'st': state})
 
@@ -440,8 +439,8 @@ class Cinder(provider.Provider):
                 self._get_connector().get_device_path(cinder_volume))
             mp = self._get_mountpoint(docker_volume_name)
             LOG.info(
-                _LI("Expected devpath: %(dp)s and mountpoint: %(mp)s for"
-                    " volume: %(d_v)s %(vol)s"),
+                "Expected devpath: %(dp)s and mountpoint: %(mp)s for"
+                " volume: %(d_v)s %(vol)s",
                 {'dp': devpath, 'mp': mp,
                  'd_v': docker_volume_name, 'vol': cinder_volume})
             mounter = mount.Mounter()
@@ -451,19 +450,19 @@ class Cinder(provider.Provider):
         elif state in (NOT_ATTACH, ATTACH_TO_OTHER):
             return {'Name': docker_volume_name, 'Mountpoint': ''}
         elif state == UNKNOWN:
-            msg = _LW("Can't find this volume '{0}' in "
-                      "Cinder").format(docker_volume_name)
+            msg = "Can't find this volume '{0}' in "
+                  "Cinder".format(docker_volume_name)
             LOG.warning(msg)
             raise exceptions.NotFound(msg)
         else:
-            msg = _LE("Volume '{0}' exists, but not attached to this volume,"
-                      "and current state is {1}").format(docker_volume_name,
+            msg = "Volume '{0}' exists, but not attached to this volume,"
+                  "and current state is {1}".format(docker_volume_name,
                                                          state)
             raise exceptions.NotMatchedState(msg)
 
     def mount(self, docker_volume_name):
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume %(d_v)s %(vol)s with state %(st)s"),
+        LOG.info("Get docker volume %(d_v)s %(vol)s with state %(st)s",
                  {'d_v': docker_volume_name, 'vol': cinder_volume,
                   'st': state})
 
@@ -487,8 +486,8 @@ class Cinder(provider.Provider):
 
         link_path = connector.get_device_path(cinder_volume)
         if not os.path.exists(link_path):
-            LOG.warning(_LW("Could not find device link file, "
-                            "so rebuild it"))
+            LOG.warning("Could not find device link file, "
+                        "so rebuild it"))
             connector.disconnect_volume(cinder_volume)
             connector.connect_volume(cinder_volume)
 
@@ -512,7 +511,7 @@ class Cinder(provider.Provider):
 
     def check_exist(self, docker_volume_name):
         _, state = self._get_docker_volume(docker_volume_name)
-        LOG.info(_LI("Get docker volume %(d_v)s with state %(st)s"),
+        LOG.info("Get docker volume %(d_v)s with state %(st)s",
                  {'d_v': docker_volume_name, 'st': state})
 
         if state == UNKNOWN:
