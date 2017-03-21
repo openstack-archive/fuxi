@@ -21,7 +21,7 @@ from oslo_utils import importutils
 
 from fuxi import app
 from fuxi import exceptions
-from fuxi.i18n import _, _LI, _LW
+from fuxi.i18n import _
 from fuxi import utils
 
 CONF = cfg.CONF
@@ -47,9 +47,9 @@ def init_app_conf():
         if provider in volume_providers_conf:
             app.volume_providers[provider] = importutils\
                 .import_class(volume_providers_conf[provider])()
-            LOG.info(_LI("Load volume provider: %s"), provider)
+            LOG.info("Load volume provider: %s", provider)
         else:
-            LOG.warning(_LW("Could not find volume provider: %s"), provider)
+            LOG.warning("Could not find volume provider: %s", provider)
     if not app.volume_providers:
         raise Exception("Not provide at least one effective volume provider")
 
@@ -74,14 +74,14 @@ def get_docker_volume(docker_volume_name):
 
 @app.route('/Plugin.Activate', methods=['POST'])
 def plugin_activate():
-    LOG.info(_LI("/Plugin.Activate"))
+    LOG.info("/Plugin.Activate")
     return flask.jsonify(Implements=[u'VolumeDriver'])
 
 
 @app.route('/VolumeDriver.Create', methods=['POST'])
 def volumedriver_create():
     json_data = flask.request.get_json(force=True)
-    LOG.info(_LI("Received JSON data %s for /VolumeDriver.Create"), json_data)
+    LOG.info("Received JSON data %s for /VolumeDriver.Create", json_data)
 
     docker_volume_name = json_data.get('Name', None)
     volume_opts = json_data.get('Opts', None) or {}
@@ -125,7 +125,7 @@ def volumedriver_create():
 @app.route('/VolumeDriver.Remove', methods=['POST'])
 def volumedriver_remove():
     json_data = flask.request.get_json(force=True)
-    LOG.info(_LI("Received JSON data %s for /VolumeDriver.Remove"), json_data)
+    LOG.info("Received JSON data %s for /VolumeDriver.Remove", json_data)
 
     docker_volume_name = json_data.get('Name', None)
     if not docker_volume_name:
@@ -143,7 +143,7 @@ def volumedriver_remove():
 @app.route('/VolumeDriver.Mount', methods=['POST'])
 def volumedriver_mount():
     json_data = flask.request.get_json(force=True)
-    LOG.info(_LI("Receive JSON data %s for /VolumeDriver.Mount"), json_data)
+    LOG.info("Receive JSON data %s for /VolumeDriver.Mount", json_data)
 
     docker_volume_name = json_data.get('Name', None)
     if not docker_volume_name:
@@ -162,7 +162,7 @@ def volumedriver_mount():
 @app.route('/VolumeDriver.Path', methods=['POST'])
 def volumedriver_path():
     json_data = flask.request.get_json(force=True)
-    LOG.info(_LI("Receive JSON data %s for /VolumeDriver.Path"), json_data)
+    LOG.info("Receive JSON data %s for /VolumeDriver.Path", json_data)
 
     docker_volume_name = json_data.get('Name', None)
     if not docker_volume_name:
@@ -173,11 +173,11 @@ def volumedriver_path():
     volume = get_docker_volume(docker_volume_name)
     if volume is not None:
         mountpoint = volume.get('Mountpoint', '')
-        LOG.info(_LI("Get mountpoint %(mp)s for docker volume %(name)s"),
+        LOG.info("Get mountpoint %(mp)s for docker volume %(name)s",
                  {'mp': mountpoint, 'name': docker_volume_name})
         return flask.jsonify(Mountpoint=mountpoint, Err=u'')
 
-    LOG.warning(_LW("Can't find mountpoint for docker volume %(name)s"),
+    LOG.warning("Can't find mountpoint for docker volume %(name)s",
                 {'name': docker_volume_name})
     return flask.jsonify(Err=u'Mountpoint Not Found')
 
@@ -185,14 +185,14 @@ def volumedriver_path():
 @app.route('/VolumeDriver.Unmount', methods=['POST'])
 def volumedriver_unmount():
     json_data = flask.request.get_json(force=True)
-    LOG.info(_LI('Receive JSON data %s for VolumeDriver.Unmount'), json_data)
+    LOG.info('Receive JSON data %s for VolumeDriver.Unmount', json_data)
     return flask.jsonify(Err=u'')
 
 
 @app.route('/VolumeDriver.Get', methods=['POST'])
 def volumedriver_get():
     json_data = flask.request.get_json(force=True)
-    LOG.info(_LI("Receive JSON data %s for /VolumeDriver.Get"), json_data)
+    LOG.info("Receive JSON data %s for /VolumeDriver.Get", json_data)
 
     docker_volume_name = json_data.get('Name', None)
     if not docker_volume_name:
@@ -202,24 +202,24 @@ def volumedriver_get():
 
     volume = get_docker_volume(docker_volume_name)
     if volume is not None:
-        LOG.info(_LI("Get docker volume: %s"), volume)
+        LOG.info("Get docker volume: %s", volume)
         return flask.jsonify(Volume=volume, Err=u'')
 
-    LOG.warning(_LW("Can't find volume %s from every provider"),
+    LOG.warning("Can't find volume %s from every provider",
                 docker_volume_name)
     return flask.jsonify(Err=u'Volume Not Found')
 
 
 @app.route('/VolumeDriver.List', methods=['POST'])
 def volumedriver_list():
-    LOG.info(_LI("/VolumeDriver.List"))
+    LOG.info("/VolumeDriver.List")
     docker_volumes = []
     for provider in app.volume_providers.values():
         vs = provider.list()
         if vs:
             docker_volumes.extend(vs)
 
-    LOG.info(_LI("Get volumes from volume providers. Volumes: %s"),
+    LOG.info("Get volumes from volume providers. Volumes: %s",
              docker_volumes)
     return flask.jsonify(Err=u'', Volumes=docker_volumes)
 
