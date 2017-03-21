@@ -15,7 +15,6 @@ import os
 import six
 
 from fuxi import exceptions
-from fuxi.i18n import _LI, _LE
 from fuxi import utils
 
 from oslo_concurrency import processutils
@@ -75,7 +74,7 @@ class Provider(object):
         :rtype: str
         """
         if not docker_volume_name:
-            LOG.error(_LE("Volume name could not be None"))
+            LOG.error("Volume name could not be None")
             raise exceptions.FuxiException("Volume name could not be None")
         if self.volume_provider_type:
             return os.path.join(CONF.volume_dir,
@@ -94,10 +93,10 @@ class Provider(object):
             if not os.path.exists(mountpoint) or not os.path.isdir(mountpoint):
                 utils.execute('mkdir', '-p', '-m=755', mountpoint,
                               run_as_root=True)
-                LOG.info(_LI("Create mountpoint %s successfully"), mountpoint)
+                LOG.info("Create mountpoint %s successfully", mountpoint)
         except processutils.ProcessExecutionError as e:
-            LOG.error(_LE("Error happened when create volume "
-                          "directory. Error: %s"), e)
+            LOG.error("Error happened when create volume "
+                      "directory. Error: %s", e)
             raise
 
     def _clear_mountpoint(self, mountpoint):
@@ -108,8 +107,8 @@ class Provider(object):
         if os.path.exists(mountpoint) and os.path.isdir(mountpoint):
             try:
                 utils.execute('rm', '-r', mountpoint, run_as_root=True)
-                LOG.info(_LI("Clear mountpoint %s successfully"), mountpoint)
+                LOG.info("Clear mountpoint %s successfully", mountpoint)
             except processutils.ProcessExecutionError as e:
-                LOG.error(_LE("Error happened when clear mountpoint. "
-                              "Error: %s"), e)
+                LOG.error("Error happened when clear mountpoint. "
+                          "Error: %s", e)
                 raise
