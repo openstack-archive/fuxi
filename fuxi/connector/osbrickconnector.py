@@ -27,7 +27,6 @@ from fuxi.common import mount
 from fuxi.common import state_monitor
 from fuxi.connector import connector as fuxi_connector
 from fuxi import exceptions
-from fuxi.i18n import _LI, _LW, _LE
 from fuxi import utils
 
 CONF = cfg.CONF
@@ -80,17 +79,17 @@ class CinderConnector(fuxi_connector.Connector):
         self.cinderclient = utils.get_cinderclient()
 
     def _get_connection_info(self, volume_id):
-        LOG.info(_LI("Get connection info for osbrick connector and use it to "
-                     "connect to volume"))
+        LOG.info("Get connection info for osbrick connector and use it to "
+                 "connect to volume")
         try:
             conn_info = self.cinderclient.volumes.initialize_connection(
                 volume_id,
                 brick_get_connector_properties())
-            LOG.info(_LI("Get connection information %s"), conn_info)
+            LOG.info("Get connection information %s", conn_info)
             return conn_info
         except cinder_exception.ClientException as e:
-            LOG.error(_LE("Error happened when initialize connection"
-                          " for volume. Error: %s"), e)
+            LOG.error("Error happened when initialize connection"
+                      " for volume. Error: %s", e)
             raise
 
     def _connect_volume(self, volume):
@@ -99,15 +98,15 @@ class CinderConnector(fuxi_connector.Connector):
         protocol = conn_info['driver_volume_type']
         brick_connector = brick_get_connector(protocol)
         device_info = brick_connector.connect_volume(conn_info['data'])
-        LOG.info(_LI("Get device_info after connect to "
-                     "volume %s") % device_info)
+        LOG.info("Get device_info after connect to "
+                 "volume %s" % device_info)
         try:
             link_path = os.path.join(consts.VOLUME_LINK_DIR, volume.id)
             utils.execute('ln', '-s', os.path.realpath(device_info['path']),
                           link_path,
                           run_as_root=True)
         except processutils.ProcessExecutionError as e:
-            LOG.error(_LE("Failed to create link for device. %s"), e)
+            LOG.error("Failed to create link for device. %s", e)
             raise
         return {'path': link_path}
 
@@ -116,8 +115,8 @@ class CinderConnector(fuxi_connector.Connector):
             link_path = self.get_device_path(volume)
             utils.execute('rm', '-f', link_path, run_as_root=True)
         except processutils.ProcessExecutionError as e:
-            LOG.warning(_LE("Error happened when remove docker volume"
-                            " mountpoint directory. Error: %s"), e)
+            LOG.warning("Error happened when remove docker volume"
+                        " mountpoint directory. Error: %s", e)
 
         conn_info = self._get_connection_info(volume.id)
 
@@ -132,7 +131,7 @@ class CinderConnector(fuxi_connector.Connector):
         try:
             self.cinderclient.volumes.reserve(volume)
         except cinder_exception.ClientException:
-            LOG.error(_LE("Reserve volume %s failed"), volume)
+            LOG.error("Reserve volume %s failed", volume)
             raise
 
         try:
@@ -141,9 +140,9 @@ class CinderConnector(fuxi_connector.Connector):
                                              instance_uuid=None,
                                              mountpoint=mountpoint,
                                              host_name=host_name)
-            LOG.info(_LI("Attach volume to this server successfully"))
+            LOG.info("Attach volume to this server successfully")
         except Exception:
-            LOG.error(_LE("Attach volume %s to this server failed"), volume)
+            LOG.error("Attach volume %s to this server failed", volume)
             with excutils.save_and_reraise_exception():
                 try:
                     self._disconnect_volume(volume)
@@ -165,10 +164,10 @@ class CinderConnector(fuxi_connector.Connector):
         try:
             self.cinderclient.volumes.detach(volume.id,
                                              attachment_uuid=attachment_uuid)
-            LOG.info(_LI("Disconnect volume successfully"))
+            LOG.info("Disconnect volume successfully")
         except cinder_exception.ClientException as e:
-            LOG.error(_LE("Error happened when detach volume %(vol)s from this"
-                          " server. Error: %(err)s"),
+            LOG.error("Error happened when detach volume %(vol)s from this"
+                      " server. Error: %(err)s",
                       {'vol': volume, 'err': e})
             raise
 
@@ -257,7 +256,7 @@ class ManilaConnector(fuxi_connector.Connector):
     def check_access_allowed(self, share):
         access_type = self.proto_access_type_map.get(share.share_proto, None)
         if not access_type:
-            LOG.warning(_LW("The share_proto %s is not enabled currently"),
+            LOG.warning("The share_proto %s is not enabled currently",
                         share.share_proto)
             return False
 
@@ -283,15 +282,15 @@ class ManilaConnector(fuxi_connector.Connector):
 
             access_type = self.proto_access_type_map[share_proto]
             access_to = self._get_access_to(access_type)
-            LOG.info(_LI("Allow machine to access share %(shr)s with "
-                         "access_type %(type)s and access_to %(to)s"),
+            LOG.info("Allow machine to access share %(shr)s with "
+                     "access_type %(type)s and access_to %(to)s",
                      {'shr': share, 'type': access_type, 'to': access_to})
             self.manilaclient.shares.allow(share, access_type, access_to, 'rw')
         except manila_exception.ClientException as e:
-            LOG.error(_LE("Failed to grant access for server, %s"), e)
+            LOG.error("Failed to grant access for server, %s", e)
             raise
 
-        LOG.info(_LI("Waiting share %s access to be active"), share)
+        LOG.info("Waiting share %s access to be active", share)
         state_monitor.StateMonitor(
             self.manilaclient, share,
             'active',
@@ -306,7 +305,7 @@ class ManilaConnector(fuxi_connector.Connector):
             'name': share.share_proto
         }
         path_info = self._get_brick_connector(share).connect_volume(conn_prop)
-        LOG.info(_LI("Connect share %(s)s successfully, path_info %(pi)s"),
+        LOG.info("Connect share %(s)s successfully, path_info %(pi)s",
                  {'s': share, 'pi': path_info})
         return {'path': share.export_location}
 
@@ -322,8 +321,8 @@ class ManilaConnector(fuxi_connector.Connector):
                     self.manilaclient.shares.deny(share, share_access.id)
                     break
         except manila_exception.ClientException as e:
-            LOG.error(_LE("Error happened when revoking access for share "
-                          "%(s)s. Error: %(err)s"), {'s': share, 'err': e})
+            LOG.error("Error happened when revoking access for share "
+                      "%(s)s. Error: %(err)s", {'s': share, 'err': e})
             raise
 
     @utils.wrap_check_authorized
@@ -349,7 +348,7 @@ class ManilaConnector(fuxi_connector.Connector):
         start_time = time.time()
         while time.time() - start_time < consts.ACCSS_DENY_TIMEOUT:
             if not _check_access_binded(share):
-                LOG.info(_LI("Disconnect share %s successfully"), share)
+                LOG.info("Disconnect share %s successfully", share)
                 return
             time.sleep(consts.SCAN_INTERVAL)
 
