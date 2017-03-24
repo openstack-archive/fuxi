@@ -17,6 +17,7 @@ from cinderclient.v2 import client
 from fuxi.i18n import _LW
 from keystoneauth1 import identity
 from keystoneauth1 import session as ks
+from manilaclient import client as manila_client
 import os_client_config
 from oslo_log import log
 from oslotest import base
@@ -52,6 +53,33 @@ def get_cinder_client_from_env():
     return client.Client(session=session)
 
 
+def get_manila_client_from_env():
+    # We should catch KeyError exception with the purpose of
+    # source or configure openrc file.
+    auth_url = os.environ['OS_AUTH_URL']
+    username = os.environ['OS_USERNAME']
+    password = os.environ['OS_PASSWORD']
+    project_name = os.environ['OS_PROJECT_NAME']
+
+    # Either project(user)_domain_name or project(user)_domain_id
+    # would be acceptable.
+    project_domain_name = os.environ.get("OS_PROJECT_DOMAIN_NAME")
+    project_domain_id = os.environ.get("OS_PROJECT_DOMAIN_ID")
+    user_domain_name = os.environ.get("OS_USER_DOMAIN_NAME")
+    user_domain_id = os.environ.get("OS_USER_DOMAIN_ID")
+
+    auth = identity.Password(auth_url=auth_url,
+                             username=username,
+                             password=password,
+                             project_name=project_name,
+                             project_domain_id=project_domain_id,
+                             project_domain_name=project_domain_name,
+                             user_domain_id=user_domain_id,
+                             user_domain_name=user_domain_name)
+    session = ks.Session(auth=auth)
+    return manila_client.Client(session=session, client_version='2')
+
+
 def _get_cloud_config_auth_data(cloud='devstack-admin'):
     """Retrieves Keystone auth data to run functional tests
 
@@ -73,6 +101,12 @@ def get_cinder_client_from_creds():
     return client.Client(session=session, auth=auth_plugin)
 
 
+def get_manila_client_from_creds():
+    auth_plugin, session = _get_cloud_config_auth_data()
+    return manila_client.Client(session=session, auth=auth_plugin,
+                                client_version='2')
+
+
 class FuxiBaseTest(base.BaseTestCase):
     """Basic class for Fuxi fullstack testing
 
@@ -86,6 +120,7 @@ class FuxiBaseTest(base.BaseTestCase):
             base_url='tcp://0.0.0.0:2375')
         try:
             self.cinder_client = get_cinder_client_from_env()
+            self.manila_client = get_manila_client_from_env()
         except Exception as e:
             # We may missing or didn't source configured openrc file.
             message = _LW('Missing environment variable %s in your local. '
@@ -95,3 +130,4 @@ class FuxiBaseTest(base.BaseTestCase):
                           'Trying credentials from DevStack cloud.yaml ...')
             LOG.warning(message, e.args[0])
             self.cinder_client = get_cinder_client_from_creds()
+            self.manila_client = get_manila_client_from_creds()
