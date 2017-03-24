@@ -67,3 +67,23 @@ class VolumeTest(fuxi_base.FuxiBaseTest):
                 volume_found = True
         self.assertTrue(volume_found)
         self.docker_client.remove_volume(vol_name)
+
+    def test_create_delete_volume_with_manila_provider(self):
+        driver_opts = {
+            'volume_provider': 'manila',
+        }
+        vol_name = utils.get_random_string(8)
+        self.docker_client.create_volume(name=vol_name, driver='fuxi',
+                                         driver_opts=driver_opts)
+        try:
+            volumes = self.manila_client.shares.list(
+                search_opts={'all_tenants': 1, 'name': vol_name})
+        except Exception as e:
+            self.docker_client.remove_volume(vol_name)
+            message = ("Failed to list cinder volumes: %s")
+            self.fail(message % str(e))
+        self.assertEqual(1, len(volumes))
+        self.docker_client.remove_volume(vol_name)
+        volumes = self.manila_client.shares.list(
+            search_opts={'all_tenants': 1, 'name': vol_name})
+        self.assertEqual(0, len(volumes))
