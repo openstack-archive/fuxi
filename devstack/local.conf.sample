@@ -13,5 +13,10 @@ ADMIN_PASSWORD=pass
 # If you want to use stable kuryr lib, please comment out this line.
 LIBS_FROM_GIT=kuryr
 
+# Manila provider options
+MANILA_DEFAULT_SHARE_TYPE_EXTRA_SPECS='snapshot_support=True create_share_from_snapshot_support=True revert_to_snapshot_support=True mount_snapshot_support=True'
+SHARE_DRIVER=manila.share.drivers.lvm.LVMShareDriver
+MANILA_OPTGROUP_generic1_driver_handles_share_servers=False
+
 enable_plugin fuxi https://git.openstack.org/openstack/fuxi
 enable_plugin manila https://github.com/openstack/manila
