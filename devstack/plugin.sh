@@ -55,10 +55,12 @@ function configure_fuxi {
     if is_service_enabled fuxi; then
         configure_auth_token_middleware $FUXI_CONFIG fuxi \
             $FUXI_AUTH_CACHE_DIR cinder
+        configure_auth_token_middleware $FUXI_CONFIG fuxi \
+            $FUXI_AUTH_CACHE_DIR manila
 
         iniset $FUXI_CONFIG DEFAULT fuxi_port 7879
         iniset $FUXI_CONFIG DEFAULT my_ip $HOST_IP
-        iniset $FUXI_CONFIG DEFAULT volume_providers cinder
+        iniset $FUXI_CONFIG DEFAULT volume_providers cinder,manila
         iniset $FUXI_CONFIG DEFAULT volume_from fuxi
         iniset $FUXI_CONFIG DEFAULT default_volume_size 1
         iniset $FUXI_CONFIG DEFAULT volume_dir /fuxi/data
