@@ -76,9 +76,6 @@ def check_already_mounted(devpath, mountpoint):
 
 
 class TestMounter(base.TestCase):
-    def setUp(self):
-        super(TestMounter, self).setUp()
-
     def test_mount(self):
         fake_devpath = '/dev/3'
         fake_mp = '/path/to/3'

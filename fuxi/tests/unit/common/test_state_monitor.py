@@ -21,9 +21,6 @@ from fuxi.tests.unit import base, fake_client, fake_object
 
 
 class TestStateMonitor(base.TestCase):
-    def setUp(self):
-        super(TestStateMonitor, self).setUp()
-
     def test_monitor_cinder_volume(self):
         fake_cinder_client = fake_client.FakeCinderClient()
         fake_cinder_volume = fake_object.FakeCinderVolume(status='available')
