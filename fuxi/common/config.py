@@ -21,8 +21,8 @@ from fuxi.i18n import _
 from fuxi.version import version_info
 
 default_opts = [
-    cfg.StrOpt('my_ip',
-               help=_('IP address of this machine.')),
+    cfg.HostAddressOpt('my_ip',
+                       help=_('IP address of this machine.')),
     cfg.IntOpt('fuxi_port',
                default=7879,
                help=_('Port for fuxi volume driver server.')),
