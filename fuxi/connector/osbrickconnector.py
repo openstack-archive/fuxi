@@ -75,9 +75,11 @@ def brick_get_connector(protocol, driver=None,
 
 
 class CinderConnector(fuxi_connector.Connector):
-    def __init__(self):
+    def __init__(self, cinderclient=None, *args, **kwargs):
         super(CinderConnector, self).__init__()
-        self.cinderclient = utils.get_cinderclient()
+        if cinderclient is None:
+            cinderclient = utils.get_cinderclient()
+        self.cinderclient = cinderclient
 
     def _get_connection_info(self, volume_id):
         LOG.info(_LI("Get connection info for osbrick connector and use it to "
