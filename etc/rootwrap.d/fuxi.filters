@@ -19,6 +19,7 @@ cat: CommandFilter, cat, root
 
 # fuxi/connector/cloudconnector/openstack.py
 ln: CommandFilter, ln, root
+udevadm: CommandFilter, udevadm, root
 
 # fuxi/blockdevice.py
 mount: CommandFilter, mount, root

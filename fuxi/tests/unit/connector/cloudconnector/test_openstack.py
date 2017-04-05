@@ -13,7 +13,6 @@
 import mock
 import os
 
-from fuxi.common import constants
 from fuxi.common import state_monitor
 from fuxi.connector.cloudconnector import openstack
 from fuxi import utils
@@ -97,9 +96,24 @@ class TestCinderConnector(base.TestCase):
                           self.connector.disconnect_volume,
                           fake_cinder_volume)
 
-    def test_get_device_path(self):
+    @mock.patch.object(os.path, 'exists', return_value=False)
+    def test_get_device_path_with_id_path_not_exist(self, not_exist):
         fake_cinder_volume = fake_object.FakeCinderVolume()
-        fake_devpath = os.path.join(constants.VOLUME_LINK_DIR,
-                                    fake_cinder_volume.id)
-        self.assertEqual(fake_devpath,
+        self.assertEqual('',
                          self.connector.get_device_path(fake_cinder_volume))
+
+    @mock.patch.object(os.path, 'exists', return_value=True)
+    def test_get_device_path(self, exist):
+        fake_cinder_volume = fake_object.FakeCinderVolume()
+        fake_link_name = 'virtio-' + fake_cinder_volume.id[:20]
+        with mock.patch.object(os, 'listdir',
+                               return_value=[fake_link_name]):
+            fake_devpath = '/dev/disk/by-id/' + fake_link_name
+            self.assertEqual(
+                fake_devpath,
+                self.connector.get_device_path(fake_cinder_volume))
+
+        with mock.patch.object(os, 'listdir', return_value=[]):
+            self.assertEqual(
+                '',
+                self.connector.get_device_path(fake_cinder_volume))

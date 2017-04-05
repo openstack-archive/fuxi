@@ -115,6 +115,7 @@ class Cinder(provider.Provider):
     def __init__(self):
         super(Cinder, self).__init__()
         self.cinderclient = utils.get_cinderclient()
+        self.connector = self._get_connector()
 
     def _get_connector(self):
         connector = cinder_conf.volume_connector
@@ -122,7 +123,9 @@ class Cinder(provider.Provider):
             msg = _("Must provide an valid volume connector")
             LOG.error(msg)
             raise exceptions.FuxiException(msg)
-        return importutils.import_class(volume_connector_conf[connector])()
+        return importutils.import_object(
+            volume_connector_conf[connector],
+            cinderclient=self.cinderclient)
 
     def _get_docker_volume(self, docker_volume_name):
         try:
@@ -252,7 +255,6 @@ class Cinder(provider.Provider):
         if not volume_opts:
             volume_opts = {}
 
-        connector = self._get_connector()
         cinder_volume, state = self._get_docker_volume(docker_volume_name)
         LOG.info("Get docker volume %(d_v)s %(vol)s with state %(st)s",
                  {'d_v': docker_volume_name, 'vol': cinder_volume,
@@ -263,12 +265,14 @@ class Cinder(provider.Provider):
             LOG.warning("The volume %(d_v)s %(vol)s already exists "
                         "and attached to this server",
                         {'d_v': docker_volume_name, 'vol': cinder_volume})
-            device_info = {'path': connector.get_device_path(cinder_volume)}
+            device_info = {
+                'path': self.connector.get_device_path(cinder_volume)
+            }
         elif state == NOT_ATTACH:
             LOG.warning("The volume %(d_v)s %(vol)s is already exists "
                         "but not attached",
                         {'d_v': docker_volume_name, 'vol': cinder_volume})
-            device_info = connector.connect_volume(cinder_volume)
+            device_info = self.connector.connect_volume(cinder_volume)
         elif state == ATTACH_TO_OTHER:
             if cinder_volume.multiattach:
                 fstype = volume_opts.get('fstype', cinder_conf.fstype)
@@ -281,7 +285,7 @@ class Cinder(provider.Provider):
                          "match"),
                         {'v_fs': vol_fstype, 'fs': fstype})
                     raise exceptions.FuxiException('FSType Not Match')
-                device_info = connector.connect_volume(cinder_volume)
+                device_info = self.connector.connect_volume(cinder_volume)
             else:
                 msg = _("The volume {0} {1} is already attached to another "
                         "server").format(docker_volume_name, cinder_volume)
@@ -295,13 +299,13 @@ class Cinder(provider.Provider):
                     volume_opts)
                 if self._check_attached_to_this(cinder_volume):
                     device_info = {
-                        'path': connector.get_device_path(cinder_volume)}
+                        'path': self.connector.get_device_path(cinder_volume)}
                 else:
-                    device_info = connector.connect_volume(cinder_volume)
+                    device_info = self.connector.connect_volume(cinder_volume)
             else:
                 cinder_volume = self._create_volume(docker_volume_name,
                                                     volume_opts)
-                device_info = connector.connect_volume(cinder_volume)
+                device_info = self.connector.connect_volume(cinder_volume)
 
         return device_info
 
@@ -340,7 +344,7 @@ class Cinder(provider.Provider):
                   'st': state})
 
         if state == ATTACH_TO_THIS:
-            link_path = self._get_connector().get_device_path(cinder_volume)
+            link_path = self.connector.get_device_path(cinder_volume)
             if not link_path or not os.path.exists(link_path):
                 msg = _(
                     "Could not find device link path for volume {0} {1} "
@@ -373,7 +377,7 @@ class Cinder(provider.Provider):
                     return True
 
             # Detach device from this server.
-            self._get_connector().disconnect_volume(cinder_volume)
+            self.connector.disconnect_volume(cinder_volume)
 
             available_volume = self.cinderclient.volumes.get(cinder_volume.id)
             # If this volume is not used by other server anymore,
@@ -415,7 +419,7 @@ class Cinder(provider.Provider):
 
                 mountpoint = self._get_mountpoint(vol.name)
                 devpath = os.path.realpath(
-                    self._get_connector().get_device_path(vol))
+                    self.connector.get_device_path(vol))
                 mps = mount.Mounter().get_mps_by_device(devpath)
                 mountpoint = mountpoint if mountpoint in mps else ''
                 docker_vol = {'Name': docker_volume_name,
@@ -437,7 +441,7 @@ class Cinder(provider.Provider):
 
         if state == ATTACH_TO_THIS:
             devpath = os.path.realpath(
-                self._get_connector().get_device_path(cinder_volume))
+                self.connector.get_device_path(cinder_volume))
             mp = self._get_mountpoint(docker_volume_name)
             LOG.info(
                 ("Expected devpath: %(dp)s and mountpoint: %(mp)s for"
@@ -467,12 +471,11 @@ class Cinder(provider.Provider):
                  {'d_v': docker_volume_name, 'vol': cinder_volume,
                   'st': state})
 
-        connector = self._get_connector()
         if state == NOT_ATTACH:
-            connector.connect_volume(cinder_volume)
+            self.connector.connect_volume(cinder_volume)
         elif state == ATTACH_TO_OTHER:
             if cinder_volume.multiattach:
-                connector.connect_volume(cinder_volume)
+                self.connector.connect_volume(cinder_volume)
             else:
                 msg = _("Volume {0} {1} is not shareable").format(
                     docker_volume_name, cinder_volume)
@@ -485,12 +488,12 @@ class Cinder(provider.Provider):
                             'state': state})
             raise exceptions.NotMatchedState()
 
-        link_path = connector.get_device_path(cinder_volume)
+        link_path = self.connector.get_device_path(cinder_volume)
         if not os.path.exists(link_path):
             LOG.warning("Could not find device link file, "
                         "so rebuild it")
-            connector.disconnect_volume(cinder_volume)
-            connector.connect_volume(cinder_volume)
+            self.connector.disconnect_volume(cinder_volume)
+            self.connector.connect_volume(cinder_volume)
 
         devpath = os.path.realpath(link_path)
         if not devpath or not os.path.exists(devpath):
