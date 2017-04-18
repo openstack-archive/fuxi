@@ -19,4 +19,6 @@ SHARE_DRIVER=manila.share.drivers.lvm.LVMShareDriver
 MANILA_OPTGROUP_generic1_driver_handles_share_servers=False
 
 enable_plugin fuxi https://git.openstack.org/openstack/fuxi
-enable_plugin manila https://github.com/openstack/manila
+# Uncomment below if you want to add Manila as another volume providers
+# FUXI_VOLUME_PROVIDERS=cinder,manila
+# enable_plugin manila https://github.com/openstack/manila
