@@ -60,7 +60,7 @@ function configure_fuxi {
 
         iniset $FUXI_CONFIG DEFAULT fuxi_port 7879
         iniset $FUXI_CONFIG DEFAULT my_ip $HOST_IP
-        iniset $FUXI_CONFIG DEFAULT volume_providers cinder,manila
+        iniset $FUXI_CONFIG DEFAULT volume_providers $FUXI_VOLUME_PROVIDERS
         iniset $FUXI_CONFIG DEFAULT volume_from fuxi
         iniset $FUXI_CONFIG DEFAULT default_volume_size 1
         iniset $FUXI_CONFIG DEFAULT volume_dir /fuxi/data
