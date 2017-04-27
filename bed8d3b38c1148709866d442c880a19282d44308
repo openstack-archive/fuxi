@@ -1,0 +1,12 @@
+Code-Review+2: Liping Mao <limao@cisco.com>
+Code-Review+1: Luis Tomas Bolivar <ltomasbo@redhat.com>
+Code-Review+1: zhonghuali <lizhonghua.li@huawei.com>
+Code-Review+1: Jaivish Kothari(janonymous) <jaivish.kothari@nectechnologies.in>
+Code-Review+2: Antoni Segura Puimedon <celebdor@gmail.com>
+Workflow+1: Antoni Segura Puimedon <celebdor@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 27 Apr 2017 08:12:26 +0000
+Reviewed-on: https://review.openstack.org/457363
+Project: openstack/fuxi
+Branch: refs/heads/master
