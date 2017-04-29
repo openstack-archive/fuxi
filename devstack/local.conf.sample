@@ -19,5 +19,6 @@ SHARE_DRIVER=manila.share.drivers.lvm.LVMShareDriver
 MANILA_OPTGROUP_generic1_driver_handles_share_servers=False
 
 FUXI_VOLUME_PROVIDERS=cinder,manila
+enable_plugin devstack-plugin-container https://git.openstack.org/openstack/devstack-plugin-container
 enable_plugin fuxi https://git.openstack.org/openstack/fuxi
 enable_plugin manila https://git.openstack.org/openstack/manila
