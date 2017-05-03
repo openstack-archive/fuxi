@@ -16,6 +16,7 @@ XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
 ETCD_VERSION=v2.2.2
+FUXI_BIN_DIR=$(get_python_exec_prefix)
 
 function install_etcd_data_store {
 
@@ -132,7 +133,7 @@ if is_service_enabled fuxi; then
         # After an ./unstack it will be stopped. So it is ok if it returns exit-code == 1
         sudo service docker stop || true
 
-        run_process docker-engine "sudo /usr/bin/docker daemon -H unix://$FUXI_DOCKER_ENGINE_SOCKET_FILE -H tcp://0.0.0.0:$FUXI_DOCKER_ENGINE_PORT --cluster-store etcd://localhost:$FUXI_ETCD_PORT"
+        run_process docker-engine "/usr/bin/docker daemon -H unix://$FUXI_DOCKER_ENGINE_SOCKET_FILE -H tcp://0.0.0.0:$FUXI_DOCKER_ENGINE_PORT --cluster-store etcd://localhost:$FUXI_ETCD_PORT"
 
         # We put the stack user as owner of the socket so we do not need to
         # run the Docker commands with sudo when developing.
@@ -153,7 +154,7 @@ if is_service_enabled fuxi; then
         fi
 
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
-        run_process fuxi "sudo fuxi-server --config-file $FUXI_CONFIG"
+        run_process fuxi "$FUXI_BIN_DIR/fuxi-server --config-file $FUXI_CONFIG" "" "root"
 
     fi
 
