@@ -49,7 +49,7 @@ function create_fuxi_account {
 function configure_fuxi {
     sudo install -d -o $STACK_USER $FUXI_CONFIG_DIR
 
-    (cd $FUXI_HOME && tox -egenconfig)
+    (cd $FUXI_HOME && exec ./tools/generate_config_file_samples.sh)
 
     cp $FUXI_HOME/etc/fuxi.conf.sample $FUXI_CONFIG
 
