@@ -1,0 +1,9 @@
+Code-Review+2: Antoni Segura Puimedon <celebdor@gmail.com>
+Workflow+1: Antoni Segura Puimedon <celebdor@gmail.com>
+Code-Review+1: ShangXiao <shangxiaobj@inspur.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 16 May 2017 07:55:03 +0000
+Reviewed-on: https://review.openstack.org/461956
+Project: openstack/fuxi
+Branch: refs/heads/master
