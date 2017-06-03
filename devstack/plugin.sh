@@ -15,21 +15,7 @@
 XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
-ETCD_VERSION=v2.2.2
 FUXI_BIN_DIR=$(get_python_exec_prefix)
-
-function install_etcd_data_store {
-
-    if [ ! -f "$DEST/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd" ]; then
-        echo "Installing etcd server"
-        mkdir $DEST/etcd
-        wget https://github.com/coreos/etcd/releases/download/$ETCD_VERSION/etcd-$ETCD_VERSION-linux-amd64.tar.gz -O $DEST/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz
-        tar xzvf $DEST/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz -C $DEST/etcd
-    fi
-
-    # Clean previous DB data
-    rm -rf $DEST/etcd/db.etcd
-}
 
 function check_docker {
     if is_ubuntu; then
@@ -83,7 +69,6 @@ if is_service_enabled fuxi; then
             git_clone_by_name "kuryr"
             setup_dev_lib "kuryr"
         fi
-        install_etcd_data_store
         setup_develop $FUXI_HOME
 
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
@@ -102,9 +87,6 @@ if is_service_enabled fuxi; then
 
         create_fuxi_account
         configure_fuxi
-
-        # Run etcd first
-        pgrep -x "etcd" >/dev/null || run_process etcd-server "$DEST/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd --data-dir $DEST/etcd/db.etcd --advertise-client-urls http://0.0.0.0:$FUXI_ETCD_PORT  --listen-client-urls http://0.0.0.0:$FUXI_ETCD_PORT"
 
         # FIXME(mestery): By default, Ubuntu ships with /bin/sh pointing to
         # the dash shell.
@@ -133,7 +115,7 @@ if is_service_enabled fuxi; then
         # After an ./unstack it will be stopped. So it is ok if it returns exit-code == 1
         sudo service docker stop || true
 
-        run_process docker-engine "/usr/bin/docker daemon -H unix://$FUXI_DOCKER_ENGINE_SOCKET_FILE -H tcp://0.0.0.0:$FUXI_DOCKER_ENGINE_PORT --cluster-store etcd://localhost:$FUXI_ETCD_PORT" "" "root"
+        run_process docker-engine "/usr/bin/docker daemon -H unix://$FUXI_DOCKER_ENGINE_SOCKET_FILE -H tcp://0.0.0.0:$FUXI_DOCKER_ENGINE_PORT --cluster-store etcd://localhost:2379" "" "root"
 
         # We put the stack user as owner of the socket so we do not need to
         # run the Docker commands with sudo when developing.
@@ -160,8 +142,6 @@ if is_service_enabled fuxi; then
 
     if [[ "$1" == "unstack" ]]; then
         stop_process fuxi-server
-        stop_process etcd-server
-        rm -rf $DEST/etcd/
         stop_process docker-engine
         # Stop process does not handle well Docker 1.12+ new multi process
         # split and doesn't kill them all. Let's leverage Docker's own pidfile
