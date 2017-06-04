@@ -1,0 +1,11 @@
+Code-Review+1: Dongcan Ye <yedongcan@yeah.net>
+Code-Review+2: Liping Mao <limao@cisco.com>
+Code-Review+2: Antoni Segura Puimedon <celebdor@gmail.com>
+Code-Review+1: Kirill Zaitsev <k.zaitsev@me.com>
+Workflow+1: Antoni Segura Puimedon <celebdor@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Sun, 04 Jun 2017 10:44:01 +0000
+Reviewed-on: https://review.openstack.org/461965
+Project: openstack/fuxi
+Branch: refs/heads/master
