@@ -10,13 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-__all__ = [
-    'list_fuxi_opts',
-]
-
 import itertools
 
 from fuxi.common import config
+
+__all__ = [
+    'list_fuxi_opts',
+]
 
 
 def list_fuxi_opts():
