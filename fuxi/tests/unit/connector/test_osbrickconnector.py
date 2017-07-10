@@ -38,7 +38,9 @@ def mock_get_connector_properties(multipath=False, enforce_multipath=False):
     return props
 
 
-def mock_list_with_attach_to_this(cls, search_opts={}):
+def mock_list_with_attach_to_this(cls, search_opts=None):
+    if search_opts is None:
+        search_opts = {}
     attachments = [{u'server_id': u'123',
                     u'attachment_id': u'123',
                     u'attached_at': u'2016-05-20T09:19:57.000000',
@@ -49,7 +51,9 @@ def mock_list_with_attach_to_this(cls, search_opts={}):
                                          attachments=attachments)]
 
 
-def mock_list_with_attach_to_other(cls, search_opts={}):
+def mock_list_with_attach_to_other(cls, search_opts=None):
+    if search_opts is None:
+        search_opts = {}
     attachments = [{u'server_id': u'123',
                     u'attachment_id': u'123',
                     u'attached_at': u'2016-05-20T09:19:57.000000',

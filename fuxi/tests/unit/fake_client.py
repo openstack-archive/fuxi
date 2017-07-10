@@ -20,7 +20,9 @@ class FakeCinderClient(object):
         def get(self, volume_id):
             return fake_object.FakeCinderVolume(id=volume_id)
 
-        def list(self, search_opts={}):
+        def list(self, search_opts=None):
+            if search_opts is None:
+                search_opts = {}
             return [fake_object.FakeCinderVolume(name='fake-vol1')]
 
         def create(self, *args, **kwargs):

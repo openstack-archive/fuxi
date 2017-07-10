@@ -23,7 +23,9 @@ from cinderclient import exceptions as cinder_exception
 from novaclient import exceptions as nova_exception
 
 
-def mock_list_with_attach_to_this(cls, search_opts={}):
+def mock_list_with_attach_to_this(cls, search_opts=None):
+    if search_opts is None:
+        search_opts = {}
     attachments = [{u'server_id': u'123',
                     u'attachment_id': u'123',
                     u'attached_at': u'2016-05-20T09:19:57.000000',
@@ -34,7 +36,9 @@ def mock_list_with_attach_to_this(cls, search_opts={}):
                                          attachments=attachments)]
 
 
-def mock_list_with_attach_to_other(cls, search_opts={}):
+def mock_list_with_attach_to_other(cls, search_opts=None):
+    if search_opts is None:
+        search_opts = {}
     attachments = [{u'server_id': u'1234',
                     u'attachment_id': u'123',
                     u'attached_at': u'2016-05-20T09:19:57.000000',
