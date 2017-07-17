@@ -2,8 +2,8 @@
 Team and repository tags
 ========================
 
-.. image:: http://governance.openstack.org/badges/fuxi.svg
-    :target: http://governance.openstack.org/reference/tags/index.html
+.. image:: https://governance.openstack.org/badges/fuxi.svg
+    :target: https://governance.openstack.org/reference/tags/index.html
 
 .. Change things from this point on
 
@@ -20,9 +20,9 @@ the unified persistence storage provider for virtual machine, baremetal
 and Docker container.
 
 * Free software: Apache license
-* Documentation: http://docs.openstack.org/developer/fuxi
-* Source: http://git.openstack.org/cgit/openstack/fuxi
-* Bugs: http://bugs.launchpad.net/fuxi
+* Documentation: https://docs.openstack.org/developer/fuxi
+* Source: https://git.openstack.org/cgit/openstack/fuxi
+* Bugs: https://bugs.launchpad.net/fuxi
 * Blueprints: https://blueprints.launchpad.net/fuxi
 
 Features
