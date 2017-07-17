@@ -1,0 +1,13 @@
+Code-Review+2: Liping Mao <limao@cisco.com>
+Code-Review+1: Jaivish Kothari(janonymous) <jaivish.kothari@nectechnologies.in>
+Code-Review+1: Hongbin Lu <hongbin.lu@huawei.com>
+Code-Review+1: Kirill Zaitsev <k.zaitsev@me.com>
+Code-Review+1: Eduardo Gonzalez <dabarren@gmail.com>
+Code-Review+2: Berezovsky Irena <irenab.dev@gmail.com>
+Workflow+1: Berezovsky Irena <irenab.dev@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 17 Jul 2017 07:08:23 +0000
+Reviewed-on: https://review.openstack.org/454408
+Project: openstack/fuxi
+Branch: refs/heads/master
