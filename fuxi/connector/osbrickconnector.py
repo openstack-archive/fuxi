@@ -99,7 +99,7 @@ class CinderConnector(fuxi_connector.Connector):
         brick_connector = brick_get_connector(protocol)
         device_info = brick_connector.connect_volume(conn_info['data'])
         LOG.info("Get device_info after connect to "
-                 "volume %s" % device_info)
+                 "volume %s", device_info)
         try:
             link_path = os.path.join(consts.VOLUME_LINK_DIR, volume.id)
             utils.execute('ln', '-s', os.path.realpath(device_info['path']),

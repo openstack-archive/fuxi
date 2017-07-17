@@ -40,7 +40,8 @@ def init_app_conf():
     # Init volume providers.
     volume_providers = CONF.volume_providers
     if not volume_providers:
-        raise Exception("Must define volume providers in configuration file")
+        raise Exception(_("Must define volume providers in "
+                          "configuration file"))
 
     app.volume_providers = collections.OrderedDict()
     for provider in volume_providers:
@@ -51,7 +52,8 @@ def init_app_conf():
         else:
             LOG.warning("Could not find volume provider: %s", provider)
     if not app.volume_providers:
-        raise Exception("Not provide at least one effective volume provider")
+        raise Exception(_("Not provide at least one effective "
+                          "volume provider"))
 
     # Init volume store directory.
     try:
