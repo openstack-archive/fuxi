@@ -31,5 +31,5 @@ class BlockerDeviceManager(object):
                 .read().rstrip('\n')
             return (float(nr_sectors) * float(sect_size)) / units.Gi
         except IOError as e:
-            LOG.error("Failed to read device size. %s", e)
-            raise exceptions.FuxiException(e.message)
+            LOG.error("Failed to read device size. %s", str(e))
+            raise exceptions.FuxiException(str(e))
