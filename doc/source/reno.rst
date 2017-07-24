@@ -4,7 +4,7 @@ Release Notes
 What is reno ?
 --------------
 
-Fuxi uses `reno <http://docs.openstack.org/developer/reno/usage.html>`_ for
+Fuxi uses `reno <https://docs.openstack.org/reno/latest/user/usage.html>`_ for
 providing release notes in-tree. That means that a patch can include a *reno
 file* or a series can have a follow-on change containing that file explaining
 what the impact is.
@@ -19,7 +19,7 @@ generated using the reno tool this way:
 where usually ``<name-your-file>`` can be ``bp-<blueprint_name>`` for a
 blueprint or ``bug-XXXXXX`` for a bugfix.
 
-Refer to the `reno documentation <http://docs.openstack.org/developer/reno/usage.html#editing-a-release-note>`_
+Refer to the `reno documentation <https://docs.openstack.org/reno/latest/user/usage.html#editing-a-release-note>`_
 for the full list of sections.
 
 

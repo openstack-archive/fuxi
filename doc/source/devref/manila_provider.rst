@@ -98,4 +98,4 @@ References
 
 * `Manila share features support mapping`_
 
-.. _Manila share features support mapping: https://docs.openstack.org/developer/manila/devref/share_back_ends_feature_support_mapping.html
+.. _Manila share features support mapping: https://docs.openstack.org/manila/latest/devref/share_back_ends_feature_support_mapping.html

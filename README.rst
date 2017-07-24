@@ -20,7 +20,7 @@ the unified persistence storage provider for virtual machine, baremetal
 and Docker container.
 
 * Free software: Apache license
-* Documentation: https://docs.openstack.org/developer/fuxi
+* Documentation: https://docs.openstack.org/fuxi/latest/
 * Source: https://git.openstack.org/cgit/openstack/fuxi
 * Bugs: https://bugs.launchpad.net/fuxi
 * Blueprints: https://blueprints.launchpad.net/fuxi
