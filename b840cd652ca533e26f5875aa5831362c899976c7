@@ -1,0 +1,10 @@
+Code-Review+2: Berezovsky Irena <irenab.dev@gmail.com>
+Code-Review+1: Kirill Zaitsev <k.zaitsev@me.com>
+Code-Review+2: Liping Mao <limao@cisco.com>
+Workflow+1: Liping Mao <limao@cisco.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Sat, 29 Jul 2017 10:16:18 +0000
+Reviewed-on: https://review.openstack.org/486510
+Project: openstack/fuxi
+Branch: refs/heads/master
