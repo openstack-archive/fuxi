@@ -15,8 +15,6 @@
 XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
-FUXI_BIN_DIR=$(get_python_exec_prefix)
-
 function check_docker {
     if is_ubuntu; then
        dpkg -s docker-engine > /dev/null 2>&1
@@ -58,6 +56,8 @@ function configure_fuxi {
         iniset $FUXI_CONFIG cinder multiattach false
         iniset $FUXI_CONFIG cinder fstype ext4
     fi
+
+    write_uwsgi_config "$FUXI_UWSGI_CONF" "$FUXI_UWSGI" "" ":7879"
 }
 
 
@@ -97,12 +97,13 @@ if is_service_enabled fuxi; then
         fi
 
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
-        run_process fuxi "$FUXI_BIN_DIR/fuxi-server --config-file $FUXI_CONFIG" "" "root"
+        run_process fuxi "$FUXI_BIN_DIR/uwsgi --ini $FUXI_UWSGI_CONF" "" "root"
 
     fi
 
     if [[ "$1" == "unstack" ]]; then
-        stop_process fuxi-server
+        stop_process fuxi
+        remove_uwsgi_config "$FUXI_UWSGI_CONF" "$FUXI_UWSGI"
     fi
 fi
 
