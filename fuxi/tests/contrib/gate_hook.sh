@@ -13,5 +13,9 @@ export DEVSTACK_LOCAL_CONFIG+=$'\n'"MANILA_DEFAULT_SHARE_TYPE_EXTRA_SPECS='snaps
 export DEVSTACK_LOCAL_CONFIG+=$'\n'"SHARE_DRIVER=manila.share.drivers.lvm.LVMShareDriver"
 export DEVSTACK_LOCAL_CONFIG+=$'\n'"MANILA_OPTGROUP_generic1_driver_handles_share_servers=False"
 export DEVSTACK_LOCAL_CONFIG+=$'\n'"FUXI_VOLUME_PROVIDERS=cinder,manila"
+export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-account"
+export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-container"
+export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-object"
+export DEVSTACK_LOCAL_CONFIG+=$'\n'"disable_service s-proxy"
 
 $BASE/new/devstack-gate/devstack-vm-gate.sh
