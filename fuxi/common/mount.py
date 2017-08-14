@@ -149,4 +149,4 @@ def do_mount(devpath, mountpoint, fstype):
             mounter.mount(devpath, mountpoint, fstype)
         except exceptions.FuxiException as e:
             with excutils.save_and_reraise_exception():
-                LOG.error(e.message)
+                LOG.error(str(e))
