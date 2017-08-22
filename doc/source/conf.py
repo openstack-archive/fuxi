@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'oslosphinx'
+    'openstackdocstheme'
 ]
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
@@ -53,8 +53,15 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
 # html_theme_path = ["."]
-# html_theme = '_theme'
+html_theme = 'openstackdocs'
 # html_static_path = ['static']
+
+#openstackdocstheme options
+repository_name = 'openstack/fuxi'
+bug_project = 'fuxi'
+bug_tag = ''
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
+
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
