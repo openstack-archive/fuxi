@@ -114,7 +114,10 @@ cinder_opts = [
     cfg.BoolOpt('multiattach',
                 default=False,
                 help=_('Allow the volume to be attached to more than '
-                       'one instance.'))
+                       'one instance.')),
+    cfg.BoolOpt('all_tenants',
+                default=True,
+                help=_('Allow access over all tenants by provided auth'))
 ]
 
 nova_group = cfg.OptGroup(
