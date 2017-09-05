@@ -20,7 +20,7 @@ FUXI_BIN_DIR=$(get_python_exec_prefix)
 FUXI_UWSGI=$FUXI_BIN_DIR/fuxi-server-wsgi
 FUXI_UWSGI_CONF=$FUXI_CONFIG_DIR/fuxi-server-uwsgi.ini
 
-DOCKER_CLUSTER_STORE=${DOCKER_CLUSTER_STORE:-etcd://localhost:$ETCD_PORT}
+DOCKER_CLUSTER_STORE=${DOCKER_CLUSTER_STORE:-etcd://$SERVICE_HOST:$ETCD_PORT}
 
 GITREPO["kuryr"]=${KURYR_REPO:-${GIT_BASE}/openstack/kuryr.git}
 GITBRANCH["kuryr"]=${KURYR_BRANCH:-master}
