@@ -50,7 +50,7 @@ function configure_fuxi {
         iniset $FUXI_CONFIG DEFAULT default_volume_size 1
         iniset $FUXI_CONFIG DEFAULT volume_dir /fuxi/data
         iniset $FUXI_CONFIG DEFAULT threaded true
-        iniset $FUXI_CONFIG DEFAULT debug True
+        iniset $FUXI_CONFIG DEFAULT debug $ENABLE_DEBUG_LOG_LEVEL
 
         iniset $FUXI_CONFIG cinder volume_connector osbrick
         iniset $FUXI_CONFIG cinder multiattach false
