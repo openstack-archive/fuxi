@@ -1,0 +1,8 @@
+Code-Review+2: Liping Mao <limao@cisco.com>
+Workflow+1: Liping Mao <limao@cisco.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 27 Sep 2017 01:30:22 +0000
+Reviewed-on: https://review.openstack.org/506361
+Project: openstack/fuxi
+Branch: refs/heads/master
