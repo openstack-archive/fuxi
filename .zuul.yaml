@@ -1,0 +1,32 @@
+- project:
+    name: openstack/fuxi
+    check:
+      jobs:
+        - fuxi-dsvm-fullstack
+        - fuxi-dsvm-py35-fullstack
+    gate:
+      jobs:
+        - fuxi-dsvm-fullstack
+        - fuxi-dsvm-py35-fullstack
+
+- job:
+    name: fuxi-dsvm-fullstack
+    parent: legacy-dsvm-base
+    run: playbooks/legacy/fuxi-dsvm-fullstack/run
+    post-run: playbooks/legacy/fuxi-dsvm-fullstack/post
+    timeout: 4200
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/devstack-plugin-container
+      - openstack/fuxi
+
+- job:
+    name: fuxi-dsvm-py35-fullstack
+    parent: legacy-dsvm-base
+    run: playbooks/legacy/fuxi-dsvm-py35-fullstack/run
+    post-run: playbooks/legacy/fuxi-dsvm-py35-fullstack/post
+    timeout: 4200
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/devstack-plugin-container
+      - openstack/fuxi
