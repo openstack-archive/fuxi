@@ -20,7 +20,7 @@ CentOS
 
 ::
 
-    $ sudo yum -y install python-devel git gcc openssl-devel
+    $ sudo yum install python-devel git gcc openssl-devel
     $ sudo yum install iscsi-initiator-utils # Install when using iSCSI client to connect remote volume
     $ sudo yum install sysfsutils  # Install when os_brick package and iSCSI client used
 
