@@ -1,0 +1,9 @@
+Code-Review+2: Berezovsky Irena <irenab.dev@gmail.com>
+Code-Review+2: Antoni Segura Puimedon <celebdor@gmail.com>
+Workflow+1: Antoni Segura Puimedon <celebdor@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Mon, 04 Dec 2017 10:29:57 +0000
+Reviewed-on: https://review.openstack.org/521017
+Project: openstack/fuxi
+Branch: refs/heads/master
