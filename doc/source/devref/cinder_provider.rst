@@ -18,18 +18,18 @@ Cinder provider
 Cinder volume provider enables Fuxi create volume from OpenStack Cinder and
 provides them to Docker containers.
 
-Cinder provider configuration setttings
+Cinder provider configuration settings
 ---------------------------------------
 
 The following parameters in `cinder` group need to be set:
 
 - `region_name` = <used to pick the URL from the service catalog>
-- `volume_connector` = <the way to connect or disconect volume. default
+- `volume_connector` = <the way to connect or disconnect volume. default
      `osbrick`, only could chose from [osbrick, openstack]>
 - `fstype` = <the filesystem type for formatting connected block device.
      default `ext4`>
 - `multiattach` = <the volume is enabled to attached to multi-host.
-     deafult `False`>
+     default `False`>
 
 .. note::
 
@@ -66,7 +66,7 @@ Connector openstack
 -------------------
 
 This connector is only supported when running the containers inside OpenStack
-Nova instances due to its usage of OpenStack Nova API 'connect' and 'disconnet'
+Nova instances due to its usage of OpenStack Nova API 'connect' and 'disconnect'
 verbs.
 
 Usage
