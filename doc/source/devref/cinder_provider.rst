@@ -29,7 +29,7 @@ The following parameters in `cinder` group need to be set:
 - `fstype` = <the filesystem type for formatting connected block device.
      default `ext4`>
 - `multiattach` = <the volume is enabled to attached to multi-host.
-     deafult `False`>
+     default `False`>
 
 .. note::
 
