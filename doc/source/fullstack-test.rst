@@ -40,7 +40,7 @@ Navigate to fuxi directory::
 
 Source the credential of 'fuxi' user::
 
-    source /opt/stack/devstack/openrc fuxi service
+    . /opt/stack/devstack/openrc fuxi service
 
 Run the test
 ============
