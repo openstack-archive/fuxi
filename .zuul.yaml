@@ -1,0 +1,15 @@
+- project:
+    templates:
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - check-requirements
+      - publish-openstack-sphinx-docs
+      - release-notes-jobs
+    check:
+      jobs:
+        - legacy-fuxi-dsvm-fullstack
+        - legacy-fuxi-dsvm-py35-fullstack
+    gate:
+      jobs:
+        - legacy-fuxi-dsvm-fullstack
+        - legacy-fuxi-dsvm-py35-fullstack
