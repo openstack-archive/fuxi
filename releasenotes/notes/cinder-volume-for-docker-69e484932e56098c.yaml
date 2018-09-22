@@ -1,5 +1,0 @@
----
-features:
-  - Implement the Docker volume plugin API for providing Cinder volumes to
-    Docker containers. Support the usage of Docker native API to create,
-    remove, list, get, mount, and unmount Cinder volumes.

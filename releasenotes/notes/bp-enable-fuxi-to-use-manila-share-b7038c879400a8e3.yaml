@@ -1,6 +1,0 @@
----
-features:
-  - Enable Docker to use Manila (as an alternative to Cinder) to provide
-    volumes to Docker containers. Manila supports multiple back-ends and
-    share_proto. In this release, NFS share_proto is supported. The support
-    of other share_proto will be added in the future.

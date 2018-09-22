@@ -1,31 +1,10 @@
-========================
-Team and repository tags
-========================
+This project is no longer maintained.
 
-.. image:: https://governance.openstack.org/badges/fuxi.svg
-    :target: https://governance.openstack.org/reference/tags/index.html
+The contents of this repository are still available in the Git
+source code management system.  To see the contents of this
+repository before it reached its end of life, please check out the
+previous commit with "git checkout HEAD^1".
 
-.. Change things from this point on
-
-===============================
-fuxi
-===============================
-
-Enable Docker container to use Cinder volume and Manila share
-
-Fuxi focuses on enabling Docker container to use Cinder volume and Manila
-share, thus Docker volume can reuse the advance features and numerous vendor
-drivers in Cinder and Manila. With Fuxi, Cinder and Manila can be used as
-the unified persistence storage provider for virtual machine, baremetal
-and Docker container.
-
-* Free software: Apache license
-* Documentation: https://docs.openstack.org/fuxi/latest/
-* Source: https://git.openstack.org/cgit/openstack/fuxi
-* Bugs: https://bugs.launchpad.net/fuxi
-* Blueprints: https://blueprints.launchpad.net/fuxi
-
-Features
---------
-
-* TODO
+For any further questions, please email
+openstack-dev@lists.openstack.org or join #openstack-dev on
+Freenode.

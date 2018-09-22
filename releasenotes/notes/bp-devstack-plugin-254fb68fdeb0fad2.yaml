@@ -1,4 +1,0 @@
----
-other:
-  - Introduce a Fuxi devstack plugin. This enables developers to use devstack
-    with the Fuxi devstack plugin to quickly setup the development environment.
