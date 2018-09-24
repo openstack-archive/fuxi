@@ -1,0 +1,9 @@
+Code-Review+2: Daniel Mellado <dmellado@redhat.com>
+Code-Review+1: Hongbin Lu <hongbin034@gmail.com>
+Workflow+1: Daniel Mellado <dmellado@redhat.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Mon, 24 Sep 2018 06:02:17 +0000
+Reviewed-on: https://review.openstack.org/604525
+Project: openstack/fuxi
+Branch: refs/heads/master
